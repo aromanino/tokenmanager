@@ -6,6 +6,7 @@ var config = {
 
   },
     decodedTokenFieldName:"User_App_Token",
+    tokenFieldName:"access_token",
     exampleUrl : "http://MyPage.it/"
 
 };

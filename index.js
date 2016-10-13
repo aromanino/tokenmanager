@@ -77,6 +77,7 @@ exports.configure =  function(config) {
     conf.authoritationMicroservice.url=config.authoritationMicroserviceUrl || conf.authoritationMicroservice.url;
     conf.authoritationMicroservice.access_token=config.access_token || conf.authoritationMicroservice.access_token;
     conf.exampleUrl = config.exampleUrl || conf.exampleUrl;
+    conf.tokenFieldName= config.tokenFieldName || conf.tokenFieldName;
 };
 
 exports.encodeToken = function(req,res,next){

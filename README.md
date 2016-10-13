@@ -46,6 +46,7 @@ tokenManager.configure( {
                          "url":"localhost:3000",
                          "access_token":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3jhk4g",
                          "exampleUrl":"http://miosito.it"
+                         "tokenFieldName":"access_token"
 });
 
 ```
@@ -65,6 +66,11 @@ The configure argument should be a JSON dictionary containing any of the keys in
 This is the name of the field containing the decoded token that the middleware adds to the request req.
 The middleware encodes and verifies the client token and, if valid and authorized, in the request(req) it is added a field called
 decodedTokenFieldName, containing the decode result.
+
+
+##### tokenFieldName (String)
+This is the name of the field containing the request token that the middleware must read and encode.
+By default the middleware expect that the name is "access_token"
 
 ##### url (String)
 if the middleware is used to call an external service that manages tokens(for example in a microservice architecture) it contains
