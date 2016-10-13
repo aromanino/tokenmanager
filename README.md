@@ -77,3 +77,41 @@ the access_token to acess this external service
 
 ##### exampleUrl (dictionary)
 String containing the domain of your application used in middleware response message.
+
+
+### <a name="middleware"></a>`middleware checkAuthorization`
+This middleware must be used to decode, validate, e verify token authoritation.
+It read the request access_token field sended by header or body or query params, encodes and verifies the client token and, if valid and authorized, in the request(req) it is added a field called
+decodedTokenFieldName, containing the decode result. If token is not valid or authorized to acess the resouce the middlewares send a response
+401 Unauthorized.
+
+
+Like this:
+
+```javascript
+var router = require('express').Router();
+var tokenManager = require('tokenAndAuthorizationManager');
+tokenManager.configure( {
+                         "decodedTokenFieldName":"UserToken",
+                         "url":"localhost:3000",
+                         "access_token":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3jhk4g",
+                         "exampleUrl":"http://miosito.it"
+});
+
+router.get('/resource', tokenManager.checkAuthorization, function(req,res){
+
+    // if you are in here the token is valid and uthorized
+
+    console.log("Decoded TOKEN:" + req.UserToken); // print the decode results
+  ...
+});
+
+```
+
+
+
+
+# Author
+
+
+Alessandro Romanino ([a.romanino@gmail.com](mailto:a.romanino@gmail.com))
