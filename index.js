@@ -73,7 +73,7 @@ exports.checkAuthorization =  function(req, res, next) {
 };
 
 exports.configure =  function(config) {
-    conf.authoritationMicroservice.decodedTokenFieldName= config.decodedTokenFieldName || conf.authoritationMicroservice.decodedTokenFieldName;
+    conf.decodedTokenFieldName= config.decodedTokenFieldName || conf.decodedTokenFieldName;
     conf.authoritationMicroservice.url=config.authoritationMicroserviceUrl || conf.authoritationMicroservice.url;
     conf.authoritationMicroservice.access_token=config.access_token || conf.authoritationMicroservice.access_token;
     conf.exampleUrl = config.exampleUrl || conf.exampleUrl;
