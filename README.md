@@ -140,11 +140,12 @@ router.get('/resource', tokenManager.checkAuthorization, function(req,res){
 ### <a name="manage"></a>`Manage token and resource(Uri) roles`
 As described above, the **checkAuthorization** middleware can be used in two modes, so if used locally you need to
 manage tokens(encode/decode) and set API endpoints roles. You Can make this with this suite of functions:
-.* [function encode(dictionaryToEncode,tokenTypeClass,validFor)](#encode)
-.* [function decode(token)](#decode)
-.* [function addRole(roles)](#addRole)
-.* [function getRoles()](#getRoles)
-.* [function resetRoles()](#resetRoles)
+
+.*  [function encode(dictionaryToEncode,tokenTypeClass,validFor)](#encode)
+.*  [function decode(token)](#decode)
+..*  [function addRole(roles)](#addRole)
+..*  [function getRoles()](#getRoles)
+..*  [function resetRoles()](#resetRoles)
 
 
 #### <a name="encode"></a>`function encode(dictionaryToEncode,tokenTypeClass,validFor)`
