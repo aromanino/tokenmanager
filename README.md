@@ -526,7 +526,7 @@ SOFTWARE.
 
 #Contributors
 ------------
-
+| --------------------------------------------------------------------------|
 | Alessandro Romanino ([a.romanino@gmail.com](mailto:a.romanino@gmail.com)) |
 | Guido Porruvecchio ([guido.porruvecchio@gmail.com](mailto:guido.porruvecchio@gmail.com)) |
 
