@@ -3,8 +3,10 @@ This module deals with the management of JWT tokens used for the protection of o
 It enables encoding and decoding of the token itself and the definition of rules that allow to determine if a token type is enabled or not
 to access a given resource.
 This package and in particular mode  **checkAuthorization** middleware can be used in two modes:
-    1.  Call an external service that manages tokens(for example in a microservice architecture)
-    2.  Locally
+
+1.  Call an external service that manages tokens(for example in a microservice architecture)
+2.  Locally
+
 
 If used locally you must manage tokens and authorizations with encode, decode and addRole functions.
 
