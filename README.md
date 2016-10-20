@@ -526,8 +526,11 @@ SOFTWARE.
 
 #Contributors
 ------------
-| Name and Surname                                                          |
-| --------------------------------------------------------------------------|
-| Alessandro Romanino ([a.romanino@gmail.com](mailto:a.romanino@gmail.com)) |
-| Guido Porruvecchio ([guido.porruvecchio@gmail.com](mailto:guido.porruvecchio@gmail.com)) |
+
+<table><tbody>
+<tr><th align="left">Alessandro Romanino</th><td><a href="https://github.com/aromanino">GitHub/romanino</a></td><td><a href="mailto:a.romanino@gmail.com">mailto:a.romanino@gmail.com</a></td></tr>
+<tr><th align="left">Guido Porruvecchio</th><td><a href="https://github.com/gporruvecchio">GitHub/porruvecchio</a></td><td><a href="mailto:guido.porruvecchio@gmail.com">mailto:guido.porruvecchio@gmail.com</a></td></tr>
+</tbody></table>
+
+
 
