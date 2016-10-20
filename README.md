@@ -163,28 +163,28 @@ This function encodes in a token a given a dictionary *dictionaryToEncode* conta
                 Unit is the key of what time you want to add from current time for token life, and value the amount of unit you want to add.
                 The unit possible values are:
 
-                | Unit Value    | Shorthand |
-                | :--------:    | :--------:|
-                | years         | y         |
-                | quarters      | Q         |
-                | months        | M         |
-                | weeks         | w         |
-                | days          | d         |
-                | hours         | h         |
-                | minutes       | m         |
-                | seconds       | s         |
-                | milliseconds  | ms        |
+| Unit Value    | Shorthand |
+| :--------:    | :--------:|
+| years         | y         |
+| quarters      | Q         |
+| months        | M         |
+| weeks         | w         |
+| days          | d         |
+| hours         | h         |
+| minutes       | m         |
+| seconds       | s         |
+| milliseconds  | ms        |
 
 
-                for example :
+for example :
 
-                ```javascript
-                // this set token life to 7 days
-                  {
-                    unit:"days",
-                    value:7
-                  }
-                ```
+```javascript
+  // this set token life to 7 days
+  {
+    unit:"days",
+    value:7
+  }
+```
 You can use this function to generate your token like in this example:
 
 ```javascript
