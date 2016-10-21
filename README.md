@@ -4,14 +4,14 @@ It enables encoding and decoding of the token itself and the definition of rules
 to access a given resource.
 This package and in particular mode  **checkAuthorization** middleware can be used in two modes:
 
-1.  Call an external service that manages tokens(for example in a microservice architecture)
-2.  Locally
+1.  In a distributed architecture calling an external service that manages tokens(for example in a microservice architecture)
+2.  In a monolithic application managing tokens Locally
 
 
-If used locally you must manage tokens and authorizations with encode, decode and addRole functions.
+If used locally you must manage tokens and authorizations with encode, decode, addRole, upgradeRole and downgradeRole functions.
 
-* [Installation](#installation)
- * [Using tokenAndAuthorizationManager](#using)
+ * [Installation](#installation)
+ * [Using tokenmanager](#using)
     * [function configure(config)](#configure)
     * [checkAuthorization middleware](#middleware)
     * [manage token](#manage)
@@ -19,41 +19,46 @@ If used locally you must manage tokens and authorizations with encode, decode an
         * [function decode(token)](#decode)
         * [URI and token roles](#role)
             * [function addRole(roles)](#addRole)
+            * [function upgradeRoles()](#upgradeRoles)
+            * [function downgradeRoles()](#downgradeRoles)
             * [function getRoles()](#getRoles)
             * [function resetRoles()](#resetRoles)
+ * [Examples](#examples)
+    * [Used Locally in a monolithic application](#locally)
+    * [Used in a microservice architecture](#microservices)
 
 
 ## <a name="installation"></a>Installation
-To use **tokenAndAuthorizationManager** install it in your Express project by typing:
+To use **tokenmanager** install it in your Express project by typing:
 
-`npm install tokenAndAuthorizationManager`
+`npm install tokenmanager`
 
 
-## <a name="using"></a>Using tokenAndAuthorizationManager
+## <a name="using"></a>Using tokenmanager
 
-### Include tokenAndAuthorizationManager
+### Include tokenmanager
 
 Just require it like a simple package:
 
 ```javascript
-var tokenManager = require('tokenAndAuthorizationManager');
+var tokenManager = require('tokenmanager');
 ```
 
-### Using tokenAndAuthorizationManager
+### Using tokenmanager
 
-tokenAndAuthorizationManager provides a function "configure" for setting customizable tokenAndAuthorizationManager params and
+tokenmanager provides a function "configure" for setting customizable tokenmanager params and
 a "checkAuthorization" middleware function to manage token request.
 
 Here the function and middleware documentation:
 
 ### <a name="configure"></a>`function configure(config)`
-This function must be used to define and customize "tokenAndAuthorizationManager" params.
+This function must be used to define and customize "tokenmanager" params.
 
 Like this:
 
 ```javascript
 var router = require('express').Router();
-var tokenManager = require('tokenAndAuthorizationManager');
+var tokenManager = require('tokenmanager');
 tokenManager.configure( {
                          "decodedTokenFieldName":"UserToken",
                          "authorizationMicroserviceUrl":"localhost:3000",
@@ -118,7 +123,7 @@ Like this:
 
 ```javascript
 var router = require('express').Router();
-var tokenManager = require('tokenAndAuthorizationManager');
+var tokenManager = require('tokenmanager');
 tokenManager.configure( {
                          "decodedTokenFieldName":"UserToken",
                          "url":"localhost:3000",
@@ -144,8 +149,11 @@ manage tokens(encode/decode) and set API endpoints roles. You Can make this with
 *  [function encode(dictionaryToEncode,tokenTypeClass,validFor)](#encode)
 *  [function decode(token)](#decode)
 *  [function addRole(roles)](#addRole)
+*  [function upgradeRoles()](#upgradeRoles)
+*  [function downgradeRoles()](#downgradeRoles)
 *  [function getRoles()](#getRoles)
 *  [function resetRoles()](#resetRoles)
+
 
 
 #### <a name="encode"></a>`function encode(dictionaryToEncode,tokenTypeClass,validFor)`
@@ -189,7 +197,7 @@ You can use this function to generate your token like in this example:
 
 ```javascript
 var router = require('express').Router();
-var tokenManager = require('tokenAndAuthorizationManager');
+var tokenManager = require('tokenmanager');
 tokenManager.configure( {
                          "decodedTokenFieldName":"UserToken",
                          "secret":"MyKey",
@@ -217,9 +225,9 @@ generated with encode(....) function
 
 You can use this function if need to unpack the information contained in the token like in this example:
 
- ```javascript
+```javascript
  var router = require('express').Router();
- var tokenManager = require('tokenAndAuthorizationManager');
+ var tokenManager = require('tokenmanager');
  tokenManager.configure( {
                           "decodedTokenFieldName":"UserToken",
                           "secret":"MyKey",
@@ -242,7 +250,7 @@ You can use this function if need to unpack the information contained in the tok
 
  console.log(decodedToken); // it prints the unpack token information: "userId":"80248", "Other" : "........."
 
- ```
+```
 
 #### <a name="addRole"></a>`function addRole(roles)`
 This function must be used to set authorization between tokens and endpoints and add new roles used by  *checkAuthorization* middleware
@@ -270,7 +278,7 @@ where:
                  the method "method"
 
 
-param roles then contain an array of role defined as above, for example:
+Param roles then contain an array of role defined as above, for example:
 ```javascript
 
     // **********************************************************************************************************************************************
@@ -287,9 +295,9 @@ param roles then contain an array of role defined as above, for example:
 
 
 Next an example of function addRole(roles) usage
- ```javascript
+```javascript
  var router = require('express').Router();
- var tokenManager = require('tokenAndAuthorizationManager');
+ var tokenManager = require('tokenmanager');
  tokenManager.configure( {
                           "decodedTokenFieldName":"UserToken",
                           "secret":"MyKey",
@@ -351,12 +359,63 @@ Next an example of function addRole(roles) usage
 
  });
 
- ```
+```
 
- Attention that in addRole(roles) each role defined in "roles" **override** and not **append**. for example:
- ```javascript
+Attention that in addRole(roles) each role defined in "roles" **override** and not **append**. To upgrade role you must
+use **upgradeRole(roles)** function while to downgrade role use **downgradeRole(roles)** or override roles with
+**addRole(roles)** function
+
+
+
+#### <a name="upgradeRole"></a>`function upgradeRole(roles)`
+This function must be used to update authorization between tokens and endpoints used by  *checkAuthorization* middleware
+that verify token authorization for particular resources.
+
+The roles param is an array where each element is an object containing a single role. Single role object is defined as bellow:
+
+```javascript
+
+ // ******************************************************************************************************************
+ //    updating a role where only  "tokenTypeOne, TokenTypeTwo" tokens type are authorized to access the resource
+ //    "/resource" called with method "GET"
+ // ******************************************************************************************************************
+   {
+     "URI":"/resource",
+     "method":"GET",
+     "authToken":[tokenTypeOne, TokenTypeTwo],
+   }
+
+```
+
+where:
+..* URI : A string containing the path of the resource on witch set the role
+..* method : A string the method on which set the role used to call the resource on which set the role
+..* authToken : An array of Strings containing the list of token types authorized to access the resource "URI" with
+              the method "method"
+
+
+param roles then contain an array of role defined as above, for example:
+```javascript
+
+     // **********************************************************************************************************************************************
+     //  defining a roles where:
+     //       1. only  "admin, tokenTypeOne, TokenTypeTwo" tokens type are authorized to access the resource "/resource" called with method "GET"
+     //       2. only  "admin" tokens type are authorized to access the resource "/resource" called with method "POST"
+     // **********************************************************************************************************************************************
+     var roles= [
+                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
+                 { "URI":"/resource", "method":"POST",  "authToken":[admin]}
+     ];
+
+```
+
+
+Next an example of function upgradeRole(roles) usage
+
+
+```javascript
  var router = require('express').Router();
- var tokenManager = require('tokenAndAuthorizationManager');
+ var tokenManager = require('tokenmanager');
  tokenManager.configure( {
                           "decodedTokenFieldName":"UserToken",
                           "secret":"MyKey",
@@ -370,7 +429,7 @@ Next an example of function addRole(roles) usage
      ];
  tokenManager.addRole(roles);
 
- tokenManager.addRole({ "URI":"/resource", "method":"POST",  "authToken":[newAdmin]});
+ tokenManager.upgradeRole({ "URI":"/resource", "method":"POST",  "authToken":[newAdmin]});
 
 
  // dictionary to encode in the token
@@ -396,33 +455,114 @@ Next an example of function addRole(roles) usage
 
  router.post("/resource",tokenManager.checkAuthorization,function(req,res,next){
 
-     // this is an API authenticated accessible only with "newAdmin" and not with "admin" tokens as described in the first role
-     // { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]} because the second role
-     // { "URI":"/resource", "method":"POST",  "authToken":[newAdmin]} override the first
+     // this is an API authenticated accessible  with "newAdmin" and "admin" tokens as described by the first role
+     // { "URI":"/resource", "method":"POST",  "authToken":[admin]} and the second role
+     // { "URI":"/resource", "method":"POST",  "authToken":[newAdmin]} that extend the first.
+
+  });
+```
+
+#### <a name="downgradeRole"></a>`function downgradeRole(roles)`
+This function must be used to downgrade authorization between tokens and endpoints used by  *checkAuthorization* middleware
+that verify token authorization for particular resources.
+
+The roles param is an array where each element is an object containing a single role. Single role object is defined as bellow:
+
+```javascript
+
+ // ******************************************************************************************************************
+ //    updating a role where "tokenTypeOne, TokenTypeTwo" tokens type are not authorized to access the resource
+ //    "/resource" called with method "GET"
+ // ******************************************************************************************************************
+   {
+     "URI":"/resource",
+     "method":"GET",
+     "authToken":[tokenTypeOne, TokenTypeTwo],
+   }
+
+```
+
+where:
+..* URI : A string containing the path of the resource on witch set the role
+..* method : A string the method on which set the role used to call the resource on which set the role
+..* authToken : An array of Strings containing the list of token types that must be removed from tokens authorized to
+access the resource "URI" with the method "method"
+
+
+param roles then contain an array of role defined as above, for example:
+```javascript
+
+ // *********************************************************************************************************************************
+ //  defining a roles where:
+ //       1. remove  "tokenTypeOne, TokenTypeTwo" from tokens authorized to access the resource "/resource" called with method "GET"
+ //       2. remove  "admin" from tokens type are authorized to access the resource "/resource" called with method "POST"
+ // *********************************************************************************************************************************
+ var roles= [
+             { "URI":"/resource", "method":"GET",  "authToken":[tokenTypeOne, TokenTypeTwo]},
+             { "URI":"/resource", "method":"POST",  "authToken":[admin]}
+ ];
+
+```
+
+
+Next an example of function downgradeRole(roles) usage
+
+
+```javascript
+ var router = require('express').Router();
+ var tokenManager = require('tokenmanager');
+ tokenManager.configure( {
+                          "decodedTokenFieldName":"UserToken",
+                          "secret":"MyKey",
+                          "exampleUrl":"http://miosito.it"
+ });
+
+
+ var roles= [
+                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
+                 { "URI":"/resource", "method":"POST",  "authToken":[admin, newAdmin]}
+     ];
+ tokenManager.addRole(roles);
+
+ tokenManager.downgradeRole({ "URI":"/resource", "method":"POST",  "authToken":[newAdmin]});
+
+
+ // dictionary to encode in the token
+    var toTokenize={
+            "userId":"80248",
+            "Other" : "........."
+    };
+
+ // now create a *TokenTypeOne* that expire within 1 hous.
+ var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+
+
+ //create authenticated endpoints using middleware
+ router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
+
+     // this is an endpoint authenticated accessible only with "admin, tokenTypeOne, TokenTypeTwo" tokens as
+     // described in the role { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]}
+
 
   });
 
+ router.post("/resource",tokenManager.checkAuthorization,function(req,res,next){
 
- // To update a role in append mode you must redefine the role concatenating the new with previous role
+     // this is an API authenticated accessible only with "admin" tokens because the first role
+     // { "URI":"/resource", "method":"POST",  "authToken":[admin,newAdmin]} is downgraded by second role
+     // { "URI":"/resource", "method":"POST",  "authToken":[newAdmin]}.
 
- var oldRoles=tokenManager.getRoles(); // grt roles list
- var newRole={ "URI":"/resource", "method":"POST",  "authToken":["admin","newAdmin"]}; // set new role
- if(oldRoles[newRole.URI]){ // if the role already exist
-    newRole.authToken.concat(oldRoles[newRole.URI][newRole.method]); // append new to old role
-                           //------------  ^    ------  ^ -------- //
-                           //------------  |    ------  | -------- //
- }                         //--------  Resource ----  method ----- //
- tokenManager.addRole(newRole);
+  });
+```
 
- ```
 
 #### <a name="getRoles"></a>`function getRoles()`
 This function must be used to get the list of set roles used by checkAuthorization middleware.
 
 Next an example of function getRoles() usage
- ```javascript
+```javascript
  var router = require('express').Router();
- var tokenManager = require('tokenAndAuthorizationManager');
+ var tokenManager = require('tokenmanager');
  tokenManager.configure( {
                           "decodedTokenFieldName":"UserToken",
                           "secret":"MyKey",
@@ -443,7 +583,7 @@ Next an example of function getRoles() usage
                         // { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
                         // { "URI":"/resource", "method":"POST",  "authToken":[admin]}
 
- ```
+```
 
 
 
@@ -452,9 +592,9 @@ This function must be used to reset authorization roles
 
 
 Next an example of function resetRoles() usage
- ```javascript
+```javascript
  var router = require('express').Router();
- var tokenManager = require('tokenAndAuthorizationManager');
+ var tokenManager = require('tokenmanager');
  tokenManager.configure( {
                           "decodedTokenFieldName":"UserToken",
                           "secret":"MyKey",
@@ -494,7 +634,62 @@ Next an example of function resetRoles() usage
 
   });
 
- ```
+```
+
+
+## <a name="examples"></a> Examples
+
+### <a name="locally"></a> Used Locally in a monolithic application
+
+tokenGatwa.js file
+```javascript
+ var router = require('express').Router();
+ var tokenManager = require('tokenmanager');
+ tokenManager.configure( {
+                          "decodedTokenFieldName":"UserToken",
+                          "secret":"MyKey",
+                          "exampleUrl":"http://miosito.it"
+ });
+
+
+ var roles= [
+                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
+                 { "URI":"/actions/resetRoles", "method":"POST",  "authToken":[admin]}
+ ];
+
+ // set roles
+ tokenManager.addRole(roles);
+
+ //reset roles
+ tokenManager.resetRoles();
+
+
+ // dictionary to encode in the token
+    var toTokenize={
+            "userId":"80248",
+            "Other" : "........."
+    };
+
+ // now create a *TokenTypeOne* that expire within 1 hous.
+ var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+
+
+
+
+ //create authenticated endpoints using middleware
+ router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
+
+     // This point is unreachable due tokenManager.checkAuthorization respond with Unauthorized 401 because
+     // no role set for GET "/resource" due resetRoles() reset the role dictionary
+
+  });
+
+```
+
+
+
+### <a name="microservices"></a> Used in a microservice architecture
+
 
 
 License - "MIT License"
@@ -528,7 +723,7 @@ SOFTWARE.
 ------------
 
 <table><tbody>
-<tr><th align="left">Alessandro Romanino</th><td><a href="https://github.com/aromanino">GitHub/romanino</a></td><td><a href="mailto:a.romanino@gmail.com">mailto:a.romanino@gmail.com</a></td></tr>
+<tr><th align="left">Alessandro Romanino</th><td><a href="https://github.com/aromanino">GitHub/aromanino</a></td><td><a href="mailto:a.romanino@gmail.com">mailto:a.romanino@gmail.com</a></td></tr>
 <tr><th align="left">Guido Porruvecchio</th><td><a href="https://github.com/gporruvecchio">GitHub/porruvecchio</a></td><td><a href="mailto:guido.porruvecchio@gmail.com">mailto:guido.porruvecchio@gmail.com</a></td></tr>
 </tbody></table>
 

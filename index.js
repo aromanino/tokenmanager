@@ -150,6 +150,36 @@ exports.addRole=function(roles){
     });
 };
 
+
+exports.upgradeRole=function(roles){
+
+    async.eachSeries(roles,function(value,callback){
+        role=currentRoles[value.URI]||{POST:[],GET:[],PUT:[],DELETE:[]};
+        method=value.method.toUpperCase();
+        if (method=="DEL") method= "DELETE";
+        newRole=role[method].concat(value.authToken);
+        role[method]=newRole;
+        currentRoles[value.URI]=role;
+        callback();
+    });
+};
+
+
+
+exports.downgradeRole=function(roles){
+
+    async.eachSeries(roles,function(value,callback){
+        role=currentRoles[value.URI]||{POST:[],GET:[],PUT:[],DELETE:[]};
+        method=value.method.toUpperCase();
+        if (method=="DEL") method= "DELETE";
+        newRole=_.difference(role[method],value.authToken);
+        role[method]=newRole;
+        currentRoles[value.URI]=role;
+        callback();
+    });
+};
+
+
 exports.getRoles=function(){
     return(JSON.parse(currentRoles));
 };
