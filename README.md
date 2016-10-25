@@ -1,14 +1,18 @@
 # tokenmanager
 This module deals with the management of JWT tokens used for the protection of own API.
-It enables encoding and decoding of the token itself and the definition of rules that allow to determine if a token type is enabled or not
-to access a given resource.
+It enables encoding and decoding of the token itself and the definition of rules that allow
+to determine if a token type is enabled or not to access a given resource.
+
+
 This package and in particular mode  **checkAuthorization** middleware can be used in two modes:
 
-1.  In a distributed architecture calling an external service that manages tokens(for example in a microservice architecture)
+1.  In a distributed architecture calling an external service that manages
+    tokens(for example in a microservice architecture)
 2.  In a monolithic application managing tokens Locally
 
+If used locally you must manage tokens and authorizations with encode, decode, addRole, upgradeRole
+and downgradeRole functions.
 
-If used locally you must manage tokens and authorizations with encode, decode, addRole, upgradeRole and downgradeRole functions.
 
  * [Installation](#installation)
  * [Using tokenmanager](#using)
@@ -23,6 +27,7 @@ If used locally you must manage tokens and authorizations with encode, decode, a
             * [function downgradeRoles()](#downgradeRoles)
             * [function getRoles()](#getRoles)
             * [function resetRoles()](#resetRoles)
+            * [function testAuth()](#testAuth)
  * [Examples](#examples)
     * [Used Locally in a monolithic application](#locally)
     * [Used in a microservice architecture](#microservices)
@@ -52,7 +57,7 @@ a "checkAuthorization" middleware function to manage token request.
 Here the function and middleware documentation:
 
 ### <a name="configure"></a>`function configure(config)`
-This function must be used to define and customize "tokenmanager" params.
+This function must be used to define and customize "tokenmanager" package params.
 
 Like this:
 
@@ -61,7 +66,7 @@ var router = require('express').Router();
 var tokenManager = require('tokenmanager');
 tokenManager.configure( {
                          "decodedTokenFieldName":"UserToken",
-                         "authorizationMicroserviceUrl":"localhost:3000",
+                         "authorizationMicroserviceUrl":"http://localhost:3000",
                          "authorizationMicroserviceToken":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3jhk4g",
                          "exampleUrl":"http://miosito.it"
                          "tokenFieldName":"access_token",
@@ -85,8 +90,8 @@ The configure argument should be a JSON dictionary containing any of the keys in
 
 ##### decodedTokenFieldName (String)
 This is the name of the field containing the decoded token that the middleware adds to the request req.
-The middleware encodes and verifies the client token and, if valid and authorized, in the request(req) it is added a field called
-decodedTokenFieldName, containing the decode result.
+The middleware encodes and verifies the client token and, if valid and authorized, in the request(req) it is added
+a field called decodedTokenFieldName, containing the decode result.
 
 
 ##### tokenFieldName (String)
@@ -100,13 +105,13 @@ secret key used to encode/decode token in **encode** and **decode** function
 
 
 ##### url (String)
-if the **checkAuthorization** middleware is used to call an external service that manages tokens(for example in a microservice architecture) it contains
-the url of this external service
- ```http://example.com:3000/checkIfTokenIsAuth ```
+if the **checkAuthorization** middleware is used to call an external service that manages tokens(for example in
+a microservice architecture). It contains the url of this external service.
+For example: ```http://example.com:3000/checkIfTokenIsAuth ```
 
 ##### authorizationMicroserviceToken (String)
-if the middleware is used to call an external service that manages tokens(for example in a microservice architecture) it contains
-the token to access this external service
+if the middleware is used to call an external service that manages tokens(for example in a microservice architecture)
+it contains the token to access this external service
 
 ##### exampleUrl (dictionary)
 String containing the domain of your application used in middleware response message.
@@ -114,26 +119,37 @@ String containing the domain of your application used in middleware response mes
 
 ### <a name="middleware"></a>`middleware checkAuthorization`
 This middleware must be used to decode, validate, e verify token authorization.
-It read the request access_token field sent header or body or query params, encodes and verifies the client token and, if valid and authorized, in the request(req) it is added a field called
-decodedTokenFieldName, containing the decode result. If token is not valid or authorized to access the resource the middleware send a response
+It read the request access_token field sent by header or body or query params, encodes and verifies the client token
+and, if valid and authorized, in the request(req) it is added a field (name set in config function "decodedTokenFieldName"),
+containing the decode result. If token is not valid or authorized to access the resource the middleware send a response
 401 Unauthorized.
+If this middleware is not used locally but call an external service that manage tokens, external service must be have
+an endpoint in "post" method that accept three body params as this:
+
+  body params: {decode_token: token, URI: URI, method: req.method}
+
+  where:
+  * decode_token: string containing access token used to call the resource in URI with method in field "method"
+  * URI: String containing the calling resource
+  * method: String containing the calling method used to access the resource in URI
 
 
-Like this:
+
+middleware checkAuthorization example:
 
 ```javascript
 var router = require('express').Router();
 var tokenManager = require('tokenmanager');
 tokenManager.configure( {
                          "decodedTokenFieldName":"UserToken",
-                         "url":"localhost:3000",
+                         "authorizationMicroserviceUrl":"localhost:3000",
                          "access_token":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3jhk4g",
                          "exampleUrl":"http://miosito.it"
 });
 
 router.get('/resource', tokenManager.checkAuthorization, function(req,res){
 
-    // if you are in here the token is valid and uthorized
+    // if you are in here the token is valid and authorized
 
     console.log("Decoded TOKEN:" + req.UserToken); // print the decode results
   ...
@@ -153,23 +169,24 @@ manage tokens(encode/decode) and set API endpoints roles. You Can make this with
 *  [function downgradeRoles()](#downgradeRoles)
 *  [function getRoles()](#getRoles)
 *  [function resetRoles()](#resetRoles)
+*  [function testAuth()](#testAuth)
 
 
 
 #### <a name="encode"></a>`function encode(dictionaryToEncode,tokenTypeClass,validFor)`
-This function encodes in a token a given a dictionary *dictionaryToEncode* containing the information to encode. It accepts 3 parameters:
-* **dictionaryToEncode** : Object containing the dictionary to encode in the tokens. for example:
- ```javascript
+This function encodes in a token a given a dictionary *dictionaryToEncode* containing the information to encode.
+It accepts 3 parameters:
+* **dictionaryToEncode** : Object containing the dictionary to encode in the token. for example:
+```javascript
     {
       "userId":"80248",
       "Other" : "........."
     }
- ```
-
+```
 * **tokenTypeClass** : String containing the encoding token type, for example "admin" for user admin.
-* **validFor** : Object containing information about token expires information. It has 2 keys called unit and value.
-                Unit is the key of what time you want to add from current time for token life, and value the amount of unit you want to add.
-                The unit possible values are:
+* **validFor** : Object containing information about token life information. It has 2 keys called unit and value.
+                 Unit is the key of what time you want to add from current time for token life, and value the amount
+                 of unit you want to add. The unit possible values are:
 
 | Unit Value    | Shorthand |
 | :--------:    | :--------:|
@@ -193,7 +210,8 @@ for example :
     value:7
   }
 ```
-You can use this function to generate your token like in this example:
+
+You can use this function to generate your token, like in this example:
 
 ```javascript
 var router = require('express').Router();
@@ -220,10 +238,10 @@ console.log(mytoken); // it prints a token as a string like this *32423JKH43534K
 
 
 #### <a name="decode"></a>`function decode(token)`
-This function decode the given token and return the information bundled in it. The token parameter is a token
+This function decode the given token and return the information bundled inside it. The token parameter is a token
 generated with encode(....) function
 
-You can use this function if need to unpack the information contained in the token like in this example:
+You can use this function if need to unpack the information contained in the token, like in this example:
 
 ```javascript
  var router = require('express').Router();
@@ -253,10 +271,12 @@ You can use this function if need to unpack the information contained in the tok
 ```
 
 #### <a name="addRole"></a>`function addRole(roles)`
-This function must be used to set authorization between tokens and endpoints and add new roles used by  *checkAuthorization* middleware
-to verify token authorization for particular resources.
+This function must be used to set authorization between tokens and endpoints and add new roles. Roles are
+used by  *checkAuthorization* middleware to verify token authorization for particular resources.
 
-The roles param is an array where each element is an object containing a single role. Single role object is defined as bellow:
+The roles param is an array where each element is an object containing a single role.
+Single role object is defined as bellow:
+
 ```javascript
 
     // ******************************************************************************************************************
@@ -273,28 +293,29 @@ The roles param is an array where each element is an object containing a single 
 
 where:
  ..* URI : A string containing the path of the resource on witch set the role
- ..* method : A string the method on which set the role used to call the resource on which set the role
- ..* authToken : An array of Strings containing the list of token types authorized to access the resource "URI" with
-                 the method "method"
+ ..* method : A string containing the method on which the role is set.
+ ..* authToken : An array of Strings containing the list of token types authorized to pass the role.
 
 
-Param roles then contain an array of role defined as above, for example:
+Param roles contain an array of single role defined as above, for example:
 ```javascript
 
-    // **********************************************************************************************************************************************
-    //  defining a roles where:
-    //       1. only  "admin, tokenTypeOne, TokenTypeTwo" tokens type are authorized to access the resource "/resource" called with method "GET"
-    //       2. only  "admin" tokens type are authorized to access the resource "/resource" called with method "POST"
-    // **********************************************************************************************************************************************
+// *******************************************************************************************************************
+//  defining a roles where:
+//       1. only  "admin, tokenTypeOne, TokenTypeTwo" tokens type are authorized to access the resource
+//          "/resource" called with method "GET"
+//       2. only  "admin" tokens type are authorized to access the resource "/resource" called with method "POST"
+// *******************************************************************************************************************
     var roles= [
-                { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
-                { "URI":"/resource", "method":"POST",  "authToken":[admin]}
+                { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]},
+                { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
     ];
 
 ```
 
 
 Next an example of function addRole(roles) usage
+
 ```javascript
  var router = require('express').Router();
  var tokenManager = require('tokenmanager');
@@ -306,36 +327,36 @@ Next an example of function addRole(roles) usage
 
 
  var roles= [
-                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
-                 { "URI":"/resource", "method":"POST",  "authToken":[admin]}
-     ];
+     { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]},
+     { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
+ ];
  tokenManager.addRole(roles);
 
 
  // dictionary to encode in the token
-    var toTokenize={
-            "userId":"80248",
-            "Other" : "........."
-    };
+ var toTokenize={
+   "userId":"80248",
+    "Other" : "........."
+ };
 
- // now create a *TokenTypeOne* that expire within 1 hous.
+ // now create a token of type  *TokenTypeOne* that expire within 1 hous.
  var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
 
 
 
- //create authenticated endpoints using middleware
+ //create authenticated endpoints using checkAuthorization middleware
  router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
 
-     // this is an endpoint authenticated accessible only with "admin, tokenTypeOne, TokenTypeTwo" tokens as
-     // described in the role { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]}
+     // this is an authenticated endpoint, accessible only by "admin, tokenTypeOne, TokenTypeTwo" tokens as
+     // described by the role { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]}
 
 
-  });
+ });
 
  router.post("/resource",tokenManager.checkAuthorization,function(req,res,next){
 
-     // this is an API authenticated accessible only with "admin" tokens as described in the role
+     // this is an API authenticated accessible only with "admin" tokens as described by the role
      // { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]}
 
   });
@@ -353,25 +374,25 @@ Next an example of function addRole(roles) usage
 // Unauthenticated endpoint
  router.put("/resource",function(req,res,next){
 
-    // this is an endpoint not authenticated so is reachable with or without token. Also that
-    // no role is set for PUT "/resource" an Unauthorized 401 response is not sent because
-    // checkAuthorization is not used, so it is an unauthenticated endpoint
+    // this is an endpoint not authenticated so is reachable with or without token. Through
+    // no role is set for PUT "/resource", an Unauthorized 401 response is not sent because
+    // checkAuthorization middleware is not used, so it is an unauthenticated endpoint
 
  });
 
 ```
 
 Attention that in addRole(roles) each role defined in "roles" **override** and not **append**. To upgrade role you must
-use **upgradeRole(roles)** function while to downgrade role use **downgradeRole(roles)** or override roles with
+use **upgradeRole(roles)** function while to downgrade role use **downgradeRole(roles)**.  To override roles  then use
 **addRole(roles)** function
 
 
 
 #### <a name="upgradeRole"></a>`function upgradeRole(roles)`
-This function must be used to update authorization between tokens and endpoints used by  *checkAuthorization* middleware
-that verify token authorization for particular resources.
+This function must be used to update authorization roles between tokens and endpoints.
 
-The roles param is an array where each element is an object containing a single role. Single role object is defined as bellow:
+The roles param is an array where each element is an object containing a single role.
+Single role object is defined as bellow:
 
 ```javascript
 
@@ -388,24 +409,24 @@ The roles param is an array where each element is an object containing a single 
 ```
 
 where:
-..* URI : A string containing the path of the resource on witch set the role
-..* method : A string the method on which set the role used to call the resource on which set the role
-..* authToken : An array of Strings containing the list of token types authorized to access the resource "URI" with
-              the method "method"
+ ..* URI : A string containing the path of the resource on witch set the role
+ ..* method : A string containing the method on which the role is set.
+ ..* authToken : An array of Strings containing the list of token types authorized to pass the role.
 
 
-param roles then contain an array of role defined as above, for example:
+param roles then contain an array of role defined as above:
 ```javascript
 
-     // **********************************************************************************************************************************************
-     //  defining a roles where:
-     //       1. only  "admin, tokenTypeOne, TokenTypeTwo" tokens type are authorized to access the resource "/resource" called with method "GET"
-     //       2. only  "admin" tokens type are authorized to access the resource "/resource" called with method "POST"
-     // **********************************************************************************************************************************************
-     var roles= [
-                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
-                 { "URI":"/resource", "method":"POST",  "authToken":[admin]}
-     ];
+ // ****************************************************************************************************************
+ //  defining a roles where:
+ //       1. Only  "admin, tokenTypeOne, TokenTypeTwo" tokens type are authorized to access the resource
+ //          "/resource" called with method "GET"
+ //       2. Only  "admin" tokens type are authorized to access the resource "/resource" called with method "POST"
+ // ****************************************************************************************************************
+ var roles= [
+     { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]},
+     { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
+ ];
 
 ```
 
@@ -424,12 +445,12 @@ Next an example of function upgradeRole(roles) usage
 
 
  var roles= [
-                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
-                 { "URI":"/resource", "method":"POST",  "authToken":[admin]}
-     ];
+     { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]},
+     { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
+ ];
  tokenManager.addRole(roles);
 
- tokenManager.upgradeRole({ "URI":"/resource", "method":"POST",  "authToken":[newAdmin]});
+ tokenManager.upgradeRole({ "URI":"/resource", "method":"POST",  "authToken":["newAdmin"]});
 
 
  // dictionary to encode in the token
@@ -438,7 +459,7 @@ Next an example of function upgradeRole(roles) usage
             "Other" : "........."
     };
 
- // now create a *TokenTypeOne* that expire within 1 hous.
+ // Create a *TokenTypeOne* that expire within 1 hour.
  var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
 
@@ -448,23 +469,23 @@ Next an example of function upgradeRole(roles) usage
  router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
 
      // this is an endpoint authenticated accessible only with "admin, tokenTypeOne, TokenTypeTwo" tokens as
-     // described in the role { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]}
+     // described in the role { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]}
 
 
   });
 
+
  router.post("/resource",tokenManager.checkAuthorization,function(req,res,next){
 
      // this is an API authenticated accessible  with "newAdmin" and "admin" tokens as described by the first role
-     // { "URI":"/resource", "method":"POST",  "authToken":[admin]} and the second role
-     // { "URI":"/resource", "method":"POST",  "authToken":[newAdmin]} that extend the first.
+     // { "URI":"/resource", "method":"POST",  "authToken":["admin"]} and the second role
+     // { "URI":"/resource", "method":"POST",  "authToken":["newAdmin"]} that extend the first.
 
   });
 ```
 
 #### <a name="downgradeRole"></a>`function downgradeRole(roles)`
-This function must be used to downgrade authorization between tokens and endpoints used by  *checkAuthorization* middleware
-that verify token authorization for particular resources.
+This function must be used to downgrade authorization between tokens and endpoints.
 
 The roles param is an array where each element is an object containing a single role. Single role object is defined as bellow:
 
@@ -477,33 +498,33 @@ The roles param is an array where each element is an object containing a single 
    {
      "URI":"/resource",
      "method":"GET",
-     "authToken":[tokenTypeOne, TokenTypeTwo],
+     "authToken":["tokenTypeOne", ”TokenTypeTwo“],
    }
 
 ```
 
+
 where:
-..* URI : A string containing the path of the resource on witch set the role
-..* method : A string the method on which set the role used to call the resource on which set the role
-..* authToken : An array of Strings containing the list of token types that must be removed from tokens authorized to
-access the resource "URI" with the method "method"
+ ..* URI : A string containing the path of the resource on witch set the role
+ ..* method : A string containing the method on which the role is set.
+ ..* authToken : An array of Strings containing the list of token types authorized to pass the role.
 
 
-param roles then contain an array of role defined as above, for example:
+Param roles contain an array of roles defined as above :
 ```javascript
 
- // *********************************************************************************************************************************
+ // ****************************************************************************************************************
  //  defining a roles where:
- //       1. remove  "tokenTypeOne, TokenTypeTwo" from tokens authorized to access the resource "/resource" called with method "GET"
- //       2. remove  "admin" from tokens type are authorized to access the resource "/resource" called with method "POST"
- // *********************************************************************************************************************************
+ //    1. Remove  "tokenTypeOne, TokenTypeTwo" from tokens authorized to access the resource
+ //       "/resource" called with method "GET"
+ //    2. Remove  "admin" from tokens type are authorized to access the resource "/resource" called with method "POST"
+ // ****************************************************************************************************************
  var roles= [
-             { "URI":"/resource", "method":"GET",  "authToken":[tokenTypeOne, TokenTypeTwo]},
-             { "URI":"/resource", "method":"POST",  "authToken":[admin]}
+     { "URI":"/resource", "method":"GET",  "authToken":["tokenTypeOne", ”TokenTypeTwo"]},
+     { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
  ];
 
 ```
-
 
 Next an example of function downgradeRole(roles) usage
 
@@ -519,21 +540,22 @@ Next an example of function downgradeRole(roles) usage
 
 
  var roles= [
-                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
-                 { "URI":"/resource", "method":"POST",  "authToken":[admin, newAdmin]}
-     ];
+     { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne”, ”TokenTypeTwo”]},
+     { "URI":"/resource", "method":"POST",  "authToken":["admin”, "newAdmin"]}
+ ];
  tokenManager.addRole(roles);
 
- tokenManager.downgradeRole({ "URI":"/resource", "method":"POST",  "authToken":[newAdmin]});
+ tokenManager.downgradeRole({ "URI":"/resource", "method":"POST",  "authToken":["newAdmin"]});
 
 
  // dictionary to encode in the token
-    var toTokenize={
-            "userId":"80248",
-            "Other" : "........."
-    };
+  var toTokenize={
+    "userId":"80248",
+    "Other" : "........."
+  };
 
- // now create a *TokenTypeOne* that expire within 1 hous.
+
+ // Create a *TokenTypeOne* that expire within 1 hour.
  var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
 
@@ -541,16 +563,14 @@ Next an example of function downgradeRole(roles) usage
  router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
 
      // this is an endpoint authenticated accessible only with "admin, tokenTypeOne, TokenTypeTwo" tokens as
-     // described in the role { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]}
-
-
-  });
+     // described in the role { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]}
+ });
 
  router.post("/resource",tokenManager.checkAuthorization,function(req,res,next){
 
      // this is an API authenticated accessible only with "admin" tokens because the first role
-     // { "URI":"/resource", "method":"POST",  "authToken":[admin,newAdmin]} is downgraded by second role
-     // { "URI":"/resource", "method":"POST",  "authToken":[newAdmin]}.
+     // { "URI":"/resource", "method":"POST",  "authToken":["admin","newAdmin"]} is downgraded by second role
+     // { "URI":"/resource", "method":"POST",  "authToken":["newAdmin"]}.
 
   });
 ```
@@ -559,7 +579,7 @@ Next an example of function downgradeRole(roles) usage
 #### <a name="getRoles"></a>`function getRoles()`
 This function must be used to get the list of set roles used by checkAuthorization middleware.
 
-Next an example of function getRoles() usage
+Next an example of function getRoles() usage:
 ```javascript
  var router = require('express').Router();
  var tokenManager = require('tokenmanager');
@@ -571,17 +591,17 @@ Next an example of function getRoles() usage
 
 
  var roles= [
-                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
-                 { "URI":"/resource", "method":"POST",  "authToken":[admin]}
-     ];
+     { "URI":"/resource", "method":"GET",  "authToken":[”admin”, ”tokenTypeOne", "TokenTypeTwo"]},
+     { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
+ ];
  tokenManager.addRole(roles);
 
 
  var rolesList= tokenManager.getRoles();
 
  console.log(rolesList) // print this:
-                        // { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
-                        // { "URI":"/resource", "method":"POST",  "authToken":[admin]}
+                        // { "URI":"/resource", "method":"GET",  "authToken":[”admin", "tokenTypeOne", "TokenTypeTwo"]},
+                        // { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
 
 ```
 
@@ -589,7 +609,6 @@ Next an example of function getRoles() usage
 
 #### <a name="resetRoles"></a>`function resetRoles()`
 This function must be used to reset authorization roles
-
 
 Next an example of function resetRoles() usage
 ```javascript
@@ -603,58 +622,9 @@ Next an example of function resetRoles() usage
 
 
  var roles= [
-                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
-                 { "URI":"/actions/resetRoles", "method":"POST",  "authToken":[admin]}
+     { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]},
+     { "URI":"/actions/resetRoles", "method":"POST",  "authToken":["admin"]}
 
-     ];
- // set roles
- tokenManager.addRole(roles);
-
- //reset roles
- tokenManager.resetRoles();
-
-
- // dictionary to encode in the token
-    var toTokenize={
-            "userId":"80248",
-            "Other" : "........."
-    };
-
- // now create a *TokenTypeOne* that expire within 1 hous.
- var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
-
-
-
-
- //create authenticated endpoints using middleware
- router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
-
-     // This point is unreachable due tokenManager.checkAuthorization respond with Unauthorized 401 because
-     // no role set for GET "/resource" due resetRoles() reset the role dictionary
-
-  });
-
-```
-
-
-## <a name="examples"></a> Examples
-
-### <a name="locally"></a> Used Locally in a monolithic application
-
-tokenGatwa.js file
-```javascript
- var router = require('express').Router();
- var tokenManager = require('tokenmanager');
- tokenManager.configure( {
-                          "decodedTokenFieldName":"UserToken",
-                          "secret":"MyKey",
-                          "exampleUrl":"http://miosito.it"
- });
-
-
- var roles= [
-                 { "URI":"/resource", "method":"GET",  "authToken":[admin, tokenTypeOne, TokenTypeTwo]},
-                 { "URI":"/actions/resetRoles", "method":"POST",  "authToken":[admin]}
  ];
 
  // set roles
@@ -665,16 +635,13 @@ tokenGatwa.js file
 
 
  // dictionary to encode in the token
-    var toTokenize={
-            "userId":"80248",
-            "Other" : "........."
-    };
+ var toTokenize={
+       "userId":"80248",
+        "Other" : "........."
+ };
 
- // now create a *TokenTypeOne* that expire within 1 hous.
+ // now create a *TokenTypeOne* that expire within 1 hour.
  var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
-
-
-
 
  //create authenticated endpoints using middleware
  router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
@@ -686,10 +653,611 @@ tokenGatwa.js file
 
 ```
 
+#### <a name="testAuth"></a>`function testAuth(token,URI, method, callback)`
+This function must be used to test authorization roles. It test if a token type can access a resource.
+
+Parameters:
+    token: String containing token on which test authorization
+    URI: String containing resource on which test authorization
+    method: String containing http method on which test authorization
+    callback: callback function "function(err,responseOBJ)" with two parameters:
+                err: String containing http error 400, 401 ... or null if test passed
+                responseOBJ:  Object containing response. If test passed (err==null) it contain decoded token information.
+                              if test fail (err!=null) it contain an object with error_message field that
+                              explain qhy test fail.
 
 
-### <a name="microservices"></a> Used in a microservice architecture
 
+Next an example of function testAuth() usage:
+```javascript
+ var router = require('express').Router();
+ var tokenManager = require('tokenmanager');
+ tokenManager.configure( {
+                          "decodedTokenFieldName":"UserToken",
+                          "secret":"MyKey",
+                          "exampleUrl":"http://miosito.it"
+ });
+
+ var roles= [
+     { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]},
+     { "URI":"/actions/resetRoles", "method":"POST",  "authToken":["admin"]}
+
+ ];
+ // set roles
+ tokenManager.addRole(roles);
+
+
+ // dictionary to encode in the token
+ var toTokenize={
+    "userId":"80248",
+    "Other" : "........."
+};
+
+ // Create a *TokenTypeOne* that expire within 1 hour.
+ var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+
+
+
+
+ //test if mytoken can access resource ""/resource" in get method
+ tokenManager.testAuth(mytoken,"/resource","GET",function(err,response){
+    if(err) ...... // test failed
+
+    // if you are here test passed, so token is authorized.
+
+    ......YOUR LOGIC ......
+ });
+
+```
+
+
+
+## <a name="examples"></a> Examples
+
+### <a name="locally"></a> Used Locally in a monolithic application
+
+In this example i create a Users.js file to mange Users and tokens creation,
+Contents.js file to manage contents and a script that show how is simple to mange tokens
+with tokenmanager package. The script simulate how to create content and how to read all contents using
+tokens roles defined in authenticated API in User.js and Contents.js. Both User.js and Contents.js
+use checkAuthorization middleware.
+
+Users.js --> file to manage Users that uses checkAuthorization middleware and encodeToken function
+```javascript
+ var router = require('express').Router();
+ var tokenManager = require('tokenmanager');
+ tokenManager.configure( {
+          "decodedTokenFieldName":"UserToken", // checkAuthorization middleware add decoded token in UserToken field
+          "secret":"MyKey",                    // secret key to encode/decode token
+          "exampleUrl":"http://miosito.it"
+ });
+
+ // set roles where only webUIToken token can call login resource and
+ //  admin, userTypeOne, userTypeTwo token can call get user by id
+ var roles= [
+             { "URI":"/:id", "method":"GET",  "authToken":["admin", "userTypeOne", "userTypeTwo"]},
+             { "URI":"/login", "method":"POST",  "authToken":["webUIToken"]}
+ ];
+
+ // set roles
+ tokenManager.addRole(roles);
+
+
+  //create authenticated endpoints using checkAuthorization middleware
+  //reachable only by admin, userTypeOne, userTypeTwo tokens as in set role
+  //{ "URI":"/:id", "method":"GET",  "authToken":["admin", "userTypeOne", "userTypeTwo"]}
+  router.get("/:id",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC
+        .......
+        .......
+
+        res.status(200).send({User:...., unpackedToken:req.UserToken); // return User and unpack token
+   });
+
+
+  //create authenticated endpoints using checkAuthorization middleware
+  //reachable only by webUIToken tokens as in set role
+  //{ "URI":"/login", "method":"POST",  "authToken":["webUIToken"]}
+  router.post("/login",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC TO LOGIN
+        //.......
+        //.......
+
+        var user={ info about logged user ....};
+
+
+       // if login is ok this endpoint must return a User token so,
+       // now create a *userTypeOne* token that expire within 1 hour.
+       // to do this use tokenManager.encode.
+       var token=tokenManager.encode(user,"userTypeOne",{unit:"hours",value:1});
+
+       res.status(200).send({access_token:token});
+    });
+
+```
+
+Contents.js --> File to manage contents. to authenticate API it uses checkAuthorization middleware
+
+```javascript
+ var router = require('express').Router();
+ var tokenManager = require('tokenmanager');
+ tokenManager.configure( {
+          "decodedTokenFieldName":"UserToken", // checkAuthorization middleware add token in UserToken field
+          "exampleUrl":"http://miosito.it"
+ });
+
+ // set roles where only admin token can create contents and
+ //  admin, userTypeOne, userTypeTwo token can call get all contents
+ var roles= [
+     { "URI":"/contents", "method":"GET",  "authToken":["admin", "userTypeOne", "userTypeTwo"]},
+     { "URI":"/contents", "method":"POST",  "authToken":["admin"]}
+ ];
+
+ // set roles
+ tokenManager.addRole(roles);
+
+
+  //Create authenticated endpoints using checkAuthorization middleware
+  //reachable only by admin, userTypeOne, userTypeTwo tokens as set in role
+  //{ "URI":"/contents", "method":"GET",  "authToken":["admin", "userTypeOne", "userTypeTwo"]}
+  router.get("/contents",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC
+        .......
+        .......
+
+        res.status(200).send("YOUR DATA....");
+   });
+
+
+  //create authenticated endpoints using checkAuthorization middleware
+  //reachable only by webUIToken tokens as set in role
+  // { "URI":"/contents", "method":"POST",  "authToken":["admin"]}
+  router.post("/contents",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC
+        //.......
+        //.......
+
+        var user=req.userInfo;
+
+
+       // Save the resource
+       var resource=new Resource(req.resource);
+
+       res.status(200).send({createdResource:resource}); // return created resource with admin token
+    });
+
+```
+
+Next a script that explain and test how call both User and Contents service that use tokenmanger to authenticate API:
+this scripts is external to application (User, Contents). To test application could be used an API client like postman
+instead this script. application runs on http://localhost:3000/
+Steeps:
+    * Create webUIToken mandatory to call user login
+    * call user /login to get user token as admin(mandatory to create resource as set in roles)
+    * create content as admin user
+    * read contents
+
+```javascript
+
+var request=require('request');
+var tokenManager = require('tokenmanager');
+
+tokenManager.configure( {
+          "secret":"MyKey"  // secret key to encode/decode token
+});
+
+
+// As set in roles we need admin token to create resource and webUIToken to call login due get token.
+// Firstly webUIToken is needed so create this token that expires in 10 seconds
+var webUIToken=tokenManager.encode({subject:"generate token on fly"},"webUIToken",{unit:"seconds",value:10});
+
+// request params
+var rqparams = {
+    url: 'http://localhost:3000/login',
+    headers: {
+            'Authorization': "Bearer " + webUIToken , // set Token
+            'content-type': 'application/json'
+    },
+    body: JSON.stringify({username:"admin@admin.com" , password:"admin"}); // login data
+};
+
+var adminToken;
+request.post(rqparams, function (error, response, body) {
+    if error console.log(error);
+
+    adminToken=JSON.parse(body).access_token; // admin token is now set
+
+});
+
+// You have the token so can create content
+
+rqparams = {
+    url: 'localhost:3000/contents',
+    headers: {
+            'Authorization': "Bearer " + adminToken , // set admin token, webUIToken is not authorized
+            'content-type': 'application/json'
+    },
+    body: JSON.stringify({... contents info ...}); // contents to create
+};
+
+request.post(rqparams, function (error, response, body) {
+    if error console.log(error);
+
+    console.log("Contents Created Successfully " + res.createdResource); // resource created
+});
+
+
+
+// now we can get contents with one of this tokens: admin, userTypeOne, userTypeTwo
+// so use admin token. I've already seen a previous login token
+
+rqparams = {
+    url: 'localhost:3000/contents',
+    headers: {
+    'Authorization': "Bearer " + adminToken , // set admin token, webUIToken is not authorized
+    },
+};
+
+request.get(rqparams, function (error, response, body) {
+if error console.log(error);
+
+    console.log("Contents: " + res.contents);
+});
+
+```
+
+
+
+### <a name="microservices"></a> tokenmanger used in a distributed architecture(for example microservice architecture).
+
+Suppose we have a microservice architecture:
+*   **authms** microservice that manage token for other microservice. it's running on http://authms.com
+*   **userms** microservice that manage users. it's running on http://userms.com
+*   **contents** microservice  that manage contents. it's running on http://contentsms.com
+
+authms should be a third parts service or you can implement it. This external service as described in
+checkAuthorization middleware, must be have an endpoint in "post" method. It is the endpoint that checkAuthorization
+middleware call to verify token authorizations. This endpoint must accept three body params as this:
+
+  body params: {decode_token: token, URI: URI, method: req.method}
+
+  where:
+  * decode_token: string containing access token used to call the resource in URI with method in field "method"
+  * URI: String containing the calling resource
+  * method: String containing the calling method used to access the resource in URI
+
+To implements this authms service, if you want, can use tokenmanager package to manage token like in the example bellow.
+
+authms --> Auth.js
+```javascript
+ var router = require('express').Router();
+ var tokenManager = require('tokenmanager');
+ tokenManager.configure( {
+          "decodedTokenFieldName":"UserToken", // checkAuthorization middleware add token in UserToken field
+          "secret":"MyKey",                    // secret key to encode/decode token
+          "exampleUrl":"http://miosito.it"
+ });
+
+ // set default roles for this ms. where only "msToken" token can access authms resources
+ var roles= [
+     { "URI":"/:id", "method":"GET",  "authToken":[admin, userTypeOne, userTypeTwo]},
+     { "URI":"/login", "method":"POST",  "authToken":["webUIToken"]}
+ ];
+
+ // set roles
+ tokenManager.addRole(roles);
+
+
+  //create authenticated endpoints using checkAuthorization middleware
+  //reachable only by "mstoken" tokens.
+
+  //It encode token and wrap tokenManager.encode function
+  router.post("/actions/createToken",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC
+        .......
+        .......
+
+        var token=tokenManager.encode(req.toTokenize,req.tokenType,req.tokenLife);
+
+        res.status(200).send({access_token:token});
+
+   });
+
+
+  // It add token roles and wrap tokenManager.addRole function
+  router.post("/actions/addRole",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC
+        //.......
+        //.......
+        // var user={ info about logged user};
+
+       var token=tokenManager.addRole(req.roles);
+
+       res.status(200).send({tokenManager.getRoles()}); // return roles list after new creation
+  });
+
+
+  // It upgrade token roles and wrap tokenManager.upgradeRole function
+  router.post("/actions/upgradeRole",tokenManager.checkAuthorization,function(req,res,next){
+        // YOUR LOGIC
+        //.......
+        //.......
+        // var user={ info about logged user};
+
+        var token=tokenManager.addRole(req.roles);
+
+        res.status(200).send({tokenManager.getRoles()}); // return roles list after new creation
+  }
+
+
+  // It downgrade token roles and wrap tokenManager.downgradeRole function
+  router.post("/actions/downgradeRole",tokenManager.checkAuthorization,function(req,res,next){
+        // YOUR LOGIC
+        //.......
+        //.......
+        // var user={ info about logged user};
+
+        var token=tokenManager.addRole(req.roles);
+
+        res.status(200).send({tokenManager.getRoles()}); // return roles list after new creation
+  }
+
+ //####################
+ // Other Logic ......
+ // .......
+ //####################
+
+   // create endpoint that other microservice call to encode and check token authorization
+
+   router.post("/checkAuthorization",tokenManager.checkAuthorization,function(req,res,next){
+
+         var tokenToDecode=req.body.decode_token; // get token to decode
+         var method=req.body.method; // get method
+         var URI=req.body.URI; // get resource URI
+
+         tokenManager.test(tokenToDecode,URI,method,function(err,retValue){
+            if(err) return res.status(err).send(retValue);
+
+            if (_.isUndefined(decoded.valid)) {
+                        return res.status(401).send(retValue);
+                    } else {
+                        if (decoded.valid == true) {
+                            return res.status(200).send(retValue);
+                        } else {
+                            return res.status(401).send(retValue);
+                        }
+                    }
+         });
+
+      });
+
+
+```
+
+Users.js --> File to manage Users in userms microservce. It call authms to get authorizations about tokens
+```javascript
+ var router = require('express').Router();
+ var tokenManager = require('tokenmanager');
+ var request=require('request');
+
+ tokenManager.configure( {
+          "decodedTokenFieldName":"UserToken", // checkAuthorization middleware add token in UserToken field
+          "secret":"MyKey",                    // secret key to encode/decode token
+          "exampleUrl":"http://miosito.it",
+          "authorizationMicroserviceUrl":"http://authms.com/checkAuthorization
+ });
+
+ // set roles where only webUIToken token can call login resource and
+ //  admin, userTypeOne, userTypeTwo token can call get user by id
+ var roles= [
+     { "URI":"/:id", "method":"GET",  "authToken":["admin", "userTypeOne", "userTypeTwo"]},
+     { "URI":"/login", "method":"POST",  "authToken":["webUIToken"]}
+ ];
+
+ // set roles calling msauth
+  var rqparams = {
+         url: 'http://authms.com/addRole',
+         headers: {
+                 'Authorization': "Bearer " + MyToken , // set Token
+                 'content-type': 'application/json'
+         },
+         body: JSON.stringify(roles);
+  };
+ request.post(rqparams, function (error, response, body) {
+     if error console.log(error);
+
+     // Here roles are set
+
+ });
+
+  //create authenticated endpoints using checkAuthorization middleware
+  //reachable only by admin, userTypeOne, userTypeTwo tokens
+  router.get("/:id",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC
+        .......
+        .......
+
+        res.status(200).send({User:...., unpackedToken:req.UserToken); // return User and unpack token
+   });
+
+
+  //create authenticated endpoints using checkAuthorization middleware
+  //reachable only by webUIToken tokens
+  router.post("/login",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC TO LOGIN
+        //.......
+        //.......
+        var user={ info about logged user};
+
+
+       // if login is ok this endpoint must return a User token so,
+       // now create a *userTypeOne* token that expire within 1 hous.
+       // using tokenManager.encode.
+
+        // encode token calling msauth
+          var rqparams = {
+                 url: 'http://authms.com/createToken',
+                 headers: {
+                         'Authorization': "Bearer " + MyToken , // set Token
+                         'content-type': 'application/json'
+                 },
+                 var token=tokenManager.encode(req.,req.,req.tokenLife);
+                 body: JSON.stringify({"toTokenize":user,"tokenType":"user","tokenLife":{unit:"hours",value:1}});
+          };
+         request.post(rqparams, function (error, response, body) {
+            res.status(200).send({access_token:JSON.parse(body).token}); // return access_token
+         });
+  });
+
+```
+
+Contents.js --> File to manage contents uses checkAuthorization middleware.
+                It call authms to get authorizations about tokens
+
+```javascript
+ var router = require('express').Router();
+ var tokenManager = require('tokenmanager');
+ tokenManager.configure( {
+          "decodedTokenFieldName":"UserToken", // checkAuthorization middleware add token in UserToken field
+          "authorizationMicroserviceUrl": "localhost:3000"  // to mange token auth call userms ms so set the url.
+          "exampleUrl":"http://miosito.it"
+ });
+
+
+ // set roles
+ var roles= [
+     { "URI":"/contents", "method":"GET",  "authToken":["admin", "userTypeOne", "userTypeTwo"]},
+     { "URI":"/contents", "method":"POST",  "authToken":["admin"]}
+ ];
+
+
+ // set roles calling msauth
+  var rqparams = {
+         url: 'http://authms.com/addRole',
+         headers: {
+                 'Authorization': "Bearer " + MyToken , // set Token
+                 'content-type': 'application/json'
+         },
+         body: JSON.stringify(roles);
+  };
+ request.post(rqparams, function (error, response, body) {
+     if error console.log(error);
+
+    // here role are set
+ });
+
+
+
+  //create authenticated endpoints using checkAuthorization middleware
+  //reachable only by admin, userTypeOne, userTypeTwo tokens
+  router.get("/contents",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC
+        .......
+        .......
+
+        res.status(200).send("YOUR DATA....");
+   });
+
+
+  //create authenticated endpoints using checkAuthorization middleware
+  //reachable only by webUIToken tokens
+  router.post("/contents",tokenManager.checkAuthorization,function(req,res,next){
+
+        // YOUR LOGIC
+        //.......
+        //.......
+
+
+       var resource=new Resource(req.resource);
+
+       res.status(200).send({createdResource:resource});
+    });
+
+```
+
+
+Next a script that explain and test how call both User and Contents microservice that use tokenmanger to
+authenticate API. This script is external to microservices (autmms, userms, contentsms).
+To test application could be used an API client like postman instead this script.
+Steeps:
+    * Create webUIToken mandatory to call user login
+    * call user /login to get user token as admin(mandatory to create resource as set in roles)
+    * create content as admin user
+    * read contents
+```javascript
+
+    var request=require('request');
+    var tokenManager = require('tokenmanager');
+
+    tokenManager.configure( {
+              "secret":"MyKey"  // secret key to encode/decode token
+     });
+
+    // make admin login to get token.
+    // to make a login webUIToken is needed so create this token that expires in 10 seconds
+    var webUIToken=tokenManager.encode({subject:"generate token on fly"},"webUIToken",{unit:"seconds",value:10});
+
+    var rqparams = {
+        url: 'localhost:3000/login',
+        headers: {
+                'Authorization': "Bearer " + webUIToken , // set Token
+                'content-type': 'application/json'
+        },
+        body: JSON.stringify({username:"admin@admin.com" , password:"admin"});
+        };
+
+    var adminToken;
+    request.post(rqparams, function (error, response, body) {
+        if error console.log(error);
+
+        adminToken=JSON.parse(body).access_token;
+
+    });
+
+    // now I have the token so can create content
+
+    rqparams = {
+        url: 'localhost:3000/contents',
+        headers: {
+                'Authorization': "Bearer " + adminToken , // set admin token, webUIToken is not authorized
+                'content-type': 'application/json'
+        },
+        body: JSON.stringify({... contents info ...});
+        };
+
+    request.post(rqparams, function (error, response, body) {
+        if error console.log(error);
+
+        console.log("Contents Created Successfully " + res.createdResource);
+    });
+
+
+     // now I can get contents with one of this tokens: admin, userTypeOne, userTypeTwo
+     // so use admin token. I've already seen a previous login token
+
+    rqparams = {
+        url: 'localhost:3000/contents',
+        headers: {
+                'Authorization': "Bearer " + adminToken , // set admin token, webUIToken is not authorized
+        },
+    };
+
+    request.get(rqparams, function (error, response, body) {
+        if error console.log(error);
+
+        console.log("Contents: " + res.contents);
+    });
+
+```
 
 
 License - "MIT License"

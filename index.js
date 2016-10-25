@@ -32,7 +32,7 @@ exports.checkAuthorization =  function(req, res, next) {
 
         if(conf.authorizationMicroservice.url) { // microservice use
             var rqparams = {
-                url: conf.authorizationMicroservice.url + '/tokenactions/checkiftokenisauth',
+                url: conf.authorizationMicroservice.url,
                 headers: {
                     'Authorization': "Bearer " + conf.authorizationMicroservice.access_token,
                     'content-type': 'application/json'
@@ -98,6 +98,29 @@ exports.checkAuthorization =  function(req, res, next) {
             .send({error:"invalid_request",error_message:"Unauthorized: Access token required, you are not allowed to use the resource"});
     }
 
+};
+
+
+exports.testAuth=function(token,URI,method,callback){
+    var decoded=this.decodeToken(token);
+    if(decoded.valid){
+        var tokenType=decoded.tokenTypeClass;
+        var role=currentRoles[URI][method.toUpperCase()];
+        if(role) {
+            if (_.contains(role, tokenType)) {
+                callback(null,decoded)
+            } else {
+                return callback(401,{error: 'Unauthorized', error_message: decoded.error_message});
+            }
+        }else{
+            return callback(401,{
+                error: "BadRequest",
+                error_message: "No auth roles defined for: " + req.method + " " + URI
+            });
+        }
+    }else{
+        return callback(400,{error:"BadRequest", error_message:"token invalid or malformed"});
+    }
 };
 
 exports.configure =  function(config) {
