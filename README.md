@@ -558,7 +558,7 @@ Single role object is defined as bellow:
    {
      "URI":"/resource",
      "method":"GET",
-     "authToken":["tokenTypeOne", ”TokenTypeTwo“],
+     "authToken":["tokenTypeOne", "TokenTypeTwo“],
    }
 
 ```
@@ -601,7 +601,7 @@ Next an example of function downgradeRole(roles) usage
 
  var roles= [
     {"URI":"/resource","method":"GET","authToken":["admin","tokenTypeOne","TokenTypeTwo"]},
-    {"URI":"/resource","method":"POST","authToken":["admin”,"newAdmin"]}
+    {"URI":"/resource","method":"POST","authToken":["admin","newAdmin"]}
  ];
  tokenManager.addRole(roles);
 
@@ -656,7 +656,7 @@ Next an example of function getRoles() usage:
  });
 
  var roles= [
-    { "URI":"/resource","method":"GET","authToken":[”admin”,"tokenTypeOne","TokenTypeTwo"]},
+    { "URI":"/resource","method":"GET","authToken":["admin","tokenTypeOne","TokenTypeTwo"]},
     { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
  ];
  tokenManager.addRole(roles);
