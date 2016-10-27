@@ -664,7 +664,6 @@ Next an example of function getRoles() usage:
 
  var rolesList= tokenManager.getRoles();
 
-
  console.log(rolesList) // print this:
                         // { "URI":"/resource","method":"GET", "authToken .......
                         // { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
