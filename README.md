@@ -600,12 +600,12 @@ Next an example of function downgradeRole(roles) usage
 
 
  var roles= [
-    { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]},
-    { "URI":"/resource", "method":"POST",  "authToken":["admin”, "newAdmin"]}
+    {"URI":"/resource","method":"GET","authToken":["admin","tokenTypeOne","TokenTypeTwo"]},
+    {"URI":"/resource","method":"POST","authToken":["admin”,"newAdmin"]}
  ];
  tokenManager.addRole(roles);
 
- tokenManager.downgradeRole({ "URI":"/resource", "method":"POST",  "authToken":["newAdmin"]});
+ tokenManager.downgradeRole({"URI":"/resource","method":"POST","authToken":["newAdmin"]});
 
 
  // dictionary to encode inside token
