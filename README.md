@@ -273,6 +273,9 @@ You can use this function if need to unpack the information contained in the tok
 
 ```
 
+#### <a name="role"></a>`URI and token roles`
+Set of function to set roles and authorizations
+
 #### <a name="addRole"></a>`function addRole(roles)`
 This function must be used to set authorization between tokens and endpoints and add new roles. Roles are
 used by  *checkAuthorization* middleware to verify token authorization for particular resources.
@@ -419,7 +422,7 @@ use **upgradeRole(roles)** function while to downgrade role use **downgradeRole(
 
 
 
-#### <a name="upgradeRole"></a>`function upgradeRole(roles)`
+#### <a name="upgradeRoles"></a>`function upgradeRole(roles)`
 This function must be used to update authorization roles between tokens and endpoints.
 
 The roles param is an array where each element is an object containing a single role.
@@ -540,7 +543,7 @@ Next an example of function upgradeRole(roles) usage
   });
 ```
 
-#### <a name="downgradeRole"></a>`function downgradeRole(roles)`
+#### <a name="downgradeRoles"></a>`function downgradeRole(roles)`
 This function must be used to downgrade authorization between tokens and endpoints.
 
 The roles param is an array where each element is an object containing a single role.
@@ -575,7 +578,7 @@ Param roles contain an array of roles defined as above :
  //    1. Remove "tokenTypeOne, TokenTypeTwo" from tokens list authorized to access the
  //       resource "/resource" called with method "GET"
  //    2. Remove  "admin" from tokens type list are authorized to access the
-          resource "/resource" called with method "POST"
+ //       resource "/resource" called with method "POST"
  // *********************************************************************************
  var roles= [
     { "URI":"/resource", "method":"GET",  "authToken":["tokenTypeOne", ”TokenTypeTwo"]},
