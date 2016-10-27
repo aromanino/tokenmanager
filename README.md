@@ -299,9 +299,9 @@ Single role object is defined as bellow:
 ```
 
 where:
- ..* URI : A string containing the path of the resource on witch set the role
- ..* method : A string containing the method on which the role is set.
- ..* authToken : An array of Strings containing the list of token types authorized to pass the role.
+ * URI : A string containing the path of the resource on witch set the role
+ * method : A string containing the method on which the role is set.
+ * authToken : An array of Strings containing the list of token types authorized to pass the role.
 
 
 Param roles contain an array of single role defined as above, for example:
@@ -443,9 +443,9 @@ Single role object is defined as bellow:
 ```
 
 where:
- ..* URI : A string containing the path of the resource on witch set the role
- ..* method : A string containing the method on which the role is set.
- ..* authToken : An array of Strings containing the list of token types authorized to pass the role.
+ * URI : A string containing the path of the resource on witch set the role
+ * method : A string containing the method on which the role is set.
+ * authToken : An array of Strings containing the list of token types authorized to pass the role.
 
 
 param roles then contain an array of role defined as above:
@@ -565,9 +565,9 @@ Single role object is defined as bellow:
 
 
 where:
- ..* URI : A string containing the path of the resource on witch set the role
- ..* method : A string containing the method on which the role is set.
- ..* authToken : An array of Strings containing the list of token types authorized to pass the role.
+ * URI : A string containing the path of the resource on witch set the role
+ * method : A string containing the method on which the role is set.
+ * authToken : An array of Strings containing the list of token types authorized to pass the role.
 
 
 Param roles contain an array of roles defined as above :
@@ -580,9 +580,9 @@ Param roles contain an array of roles defined as above :
  //    2. Remove  "admin" from tokens type list are authorized to access the
  //       resource "/resource" called with method "POST"
  // *********************************************************************************
- var roles= [
-    { "URI":"/resource", "method":"GET",  "authToken":["tokenTypeOne", ”TokenTypeTwo"]},
-    { "URI":"/resource", "method":"POST",  "authToken":["admin"]}
+ var roles=[
+    {"URI":"/resource","method":"GET","authToken":["tokenTypeOne","TokenTypeTwo"]},
+    {"URI":"/resource","method":"POST","authToken":["admin"]}
  ];
 
 ```
@@ -600,7 +600,7 @@ Next an example of function downgradeRole(roles) usage
 
 
  var roles= [
-    { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne”, ”TokenTypeTwo”]},
+    { "URI":"/resource", "method":"GET",  "authToken":["admin", "tokenTypeOne", "TokenTypeTwo"]},
     { "URI":"/resource", "method":"POST",  "authToken":["admin”, "newAdmin"]}
  ];
  tokenManager.addRole(roles);
