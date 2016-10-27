@@ -558,7 +558,7 @@ Single role object is defined as bellow:
    {
      "URI":"/resource",
      "method":"GET",
-     "authToken":["tokenTypeOne", "TokenTypeTwo“],
+     "authToken":["tokenTypeOne", "TokenTypeTwo"],
    }
 
 ```
@@ -1149,7 +1149,7 @@ Users.js --> File to manage Users in userms microservce. It call authms to get a
       "decodedTokenFieldName":"UserToken", // Add token in UserToken field
       "secret":"MyKey",                    // secret key to encode/decode token
       "exampleUrl":"http://miosito.it",
-      "authorizationMicroserviceUrl":"http://authms.com/checkAuthorization
+      "authorizationMicroserviceUrl":"http://authms.com/checkAuthorization"
  });
 
  // set roles where only webUIToken token can call login resource and
