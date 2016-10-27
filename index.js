@@ -26,7 +26,7 @@ exports.checkAuthorization =  function(req, res, next) {
             var URI;
             var path = (req.route.path == "/") ? "" : req.route.path;
             if (_.isEmpty(req.baseUrl))
-                URI = req.path + path;
+                URI = path;
             else
                 URI = req.baseUrl + path;
 
@@ -41,7 +41,7 @@ exports.checkAuthorization =  function(req, res, next) {
             };
 
 
-            var decoded = null;
+            let decoded = null;
 
             request.post(rqparams, function (error, response, body) {
 
@@ -69,7 +69,7 @@ exports.checkAuthorization =  function(req, res, next) {
                 }
             });
         }else{ // local Use
-            var decoded=decodeToken(token);
+            let decoded=decodeToken(token);
             if(decoded.valid){
                 var tokenType=decoded.tokenTypeClass;
                 var role=currentRoles[URI][req.method.toUpperCase()];
