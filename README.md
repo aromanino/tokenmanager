@@ -19,8 +19,8 @@ and downgradeRole functions.
     * [function configure(config)](#configure)
     * [checkAuthorization middleware](#middleware)
     * [manage token](#manage)
-        * [function encode(dictionaryToEncode,tokenTypeClass,validFor)](#encode)
-        * [function decode(token)](#decode)
+        * [function encodeToken(dictionaryToEncode,tokenTypeClass,validFor)](#encode)
+        * [function decodeToken(token)](#decode)
         * [URI and token roles](#role)
             * [function addRole(roles)](#addRole)
             * [function upgradeRoles()](#upgradeRoles)
@@ -67,8 +67,8 @@ var tokenManager = require('tokenmanager');
 tokenManager.configure( {
  "decodedTokenFieldName":"UserToken",
  "authorizationMicroserviceUrl":"http://localhost:3000",
- "authorizationMicroserviceToken":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3jhk4g",
- "exampleUrl":"http://miosito.it"
+ "authorizationMicroserviceToken":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3",
+ "exampleUrl":"http://miosito.it",
  "tokenFieldName":"access_token",
  "secret":"secretKey"
 });
@@ -79,12 +79,12 @@ The configure argument should be a JSON dictionary containing any of the keys in
 
 ```javascript
 {
-"decodedTokenFieldName":"UserToken",
-"url":"localhost:3000",
-"authorizationMicroserviceToken":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3jhk4g",
-"exampleUrl":"http://MyDomain.com",
-"tokenFieldName":"access_token",
-"secret":"secretKey"
+ "decodedTokenFieldName":"UserToken",
+ "url":"localhost:3000",
+ "authorizationMicroserviceToken":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3",
+ "exampleUrl":"http://MyDomain.com",
+ "tokenFieldName":"access_token",
+ "secret":"secretKey"
 }
 ```
 
@@ -162,8 +162,8 @@ router.get('/resource', tokenManager.checkAuthorization, function(req,res){
 As described above, the **checkAuthorization** middleware can be used in two modes, so if used locally you need to
 manage tokens(encode/decode) and set API endpoints roles. You Can make this with this suite of functions:
 
-*  [function encode(dictionaryToEncode,tokenTypeClass,validFor)](#encode)
-*  [function decode(token)](#decode)
+*  [function encodeToken(dictionaryToEncode,tokenTypeClass,validFor)](#encode)
+*  [function decodeToken(token)](#decode)
 *  [function addRole(roles)](#addRole)
 *  [function upgradeRoles()](#upgradeRoles)
 *  [function downgradeRoles()](#downgradeRoles)
@@ -173,7 +173,7 @@ manage tokens(encode/decode) and set API endpoints roles. You Can make this with
 
 
 
-#### <a name="encode"></a>`function encode(dictionaryToEncode,tokenTypeClass,validFor)`
+#### <a name="encode"></a>`function encodeToken(dictionaryToEncode,tokenTypeClass,validFor)`
 This function encodes in a token a given a dictionary *dictionaryToEncode* containing the information to encode.
 It accepts 3 parameters:
 * **dictionaryToEncode** : Object containing the dictionary to encode inside token. for example:
@@ -229,7 +229,7 @@ var toTokenize={
 };
 
 // now create a *TokenTypeOne* that expire within 1 hous.
-var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+var mytoken=tokenManager.encodeToken(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
 
 
@@ -238,9 +238,9 @@ console.log(mytoken); // it prints a token as a string like :
 ```
 
 
-#### <a name="decode"></a>`function decode(token)`
+#### <a name="decode"></a>`function decodeToken(token)`
 This function decode the given token and return the information bundled inside it. The token parameter is a token
-generated with encode(....) function
+generated with encodeToken(....) function
 
 You can use this function if need to unpack the information contained in the token, like in this example:
 
@@ -260,13 +260,13 @@ You can use this function if need to unpack the information contained in the tok
     };
 
  // now create a *TokenTypeOne* that expire within 1 hous.
- var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+ var mytoken=tokenManager.encodeTokentoTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
  console.log(mytoken); // it prints a token as a string like this:
                        //32423JKH43534KJ5H435K3L6H56J6K7657H6J6K576N76JK57
 
  // if you need information in the token then you can decode it.
- var decodedToken=tokenManager.decode(mytoken);
+ var decodedToken=tokenManager.decodeToken(mytoken);
 
  console.log(decodedToken); // it prints the unpack token information:
                             // "userId":"80248", "Other" : "........."
@@ -285,11 +285,11 @@ Single role object is defined as bellow:
 
 ```javascript
 
-// *********************************************************************************
+// *************************************************************************
 // defining a role where only  "admin, tokenTypeOne, TokenTypeTwo"
 // tokens type are authorized to access the resource
 // "/resource" called with method "GET"
-// *********************************************************************************
+// *************************************************************************
     {
         "URI":"/resource",
         "method":"GET",
@@ -307,13 +307,13 @@ where:
 Param roles contain an array of single role defined as above, for example:
 ```javascript
 
-// *********************************************************************************
+// *************************************************************************
 //  defining a roles where:
-//       1. only  "admin, tokenTypeOne, TokenTypeTwo" tokens type are authorized
-//          to access the resource "/resource" called with method "GET"
-//       2. only  "admin" tokens type are authorized to access the resource
-//          "/resource" called with method "POST"
-// *********************************************************************************
+//   1. only  "admin, tokenTypeOne, TokenTypeTwo" tokens type are authorized
+//      to access the resource "/resource" called with method "GET"
+//   2. only  "admin" tokens type are authorized to access the resource
+//      "/resource" called with method "POST"
+// *************************************************************************
 var roles= [
         {
             "URI":"/resource",
@@ -364,19 +364,19 @@ Next an example of function addRole(roles) usage
  };
 
  // now create a token of type  *TokenTypeOne* that expire within 1 hous.
- var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+ var mytoken=tokenManager.encodeToken(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
 
 
 
- //create authenticated endpoints using checkAuthorization middleware
- router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
+//create authenticated endpoints using checkAuthorization middleware
+router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
 
-    // *********************************************************************************
-    // this is an authenticated endpoint, accessible only by
-    // "admin, tokenTypeOne, TokenTypeTwo" tokens as described by the role
-    // {"URI":"/resource", "method":"GET","authToken":[admin,tokenTypeOne,TokenTypeTwo]}
-    // *********************************************************************************
+// *************************************************************************
+// this is an authenticated endpoint, accessible only by
+// "admin, tokenTypeOne, TokenTypeTwo" tokens as described by the role
+// {"URI":"/resource", "method":"GET","authToken":[admin,tokenTypeOne,TokenTypeTwo]}
+// *************************************************************************
 
 
  });
@@ -513,7 +513,7 @@ Next an example of function upgradeRole(roles) usage
     };
 
  // Create a *TokenTypeOne* that expire within 1 hour.
- var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+ var mytoken=tokenManager.encodeToken(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
 
 
@@ -616,7 +616,7 @@ Next an example of function downgradeRole(roles) usage
 
 
  // Create a *TokenTypeOne*  expiring within 1 hour.
- var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+ var mytoken=tokenManager.encodeToken(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
 
  //create authenticated endpoints using middleware
@@ -704,7 +704,7 @@ Next an example of function resetRoles() usage
  };
 
  // now create a *TokenTypeOne* expiring within 1 hour.
- var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+ var mytoken=tokenManager.encodeToken(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
  //create authenticated endpoints using middleware
  router.get("/resource",tokenManager.checkAuthorization,function(req,res,next){
@@ -761,7 +761,7 @@ Next an example of function testAuth() usage:
 };
 
  // Create a *TokenTypeOne* that expiring in 1 hour.
- var mytoken=tokenManager.encode(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
+ var mytoken=tokenManager.encodeToken(toTokenize,"TokenTypeOne",{unit:"hours",value:1});
 
 
 
@@ -843,7 +843,7 @@ Users.js --> file to manage Users that uses checkAuthorization middleware and en
     // User logged so must return a User token.
     // Now create a userTypeOne token that expire within 1 hour.
     // To do this use tokenManager.encode.
-    var token=tokenManager.encode(user,"userTypeOne",{unit:"hours",value:1});
+    var token=tokenManager.encodeToken(user,"userTypeOne",{unit:"hours",value:1});
 
        res.status(200).send({access_token:token}); // return token
     });
@@ -932,7 +932,7 @@ tokenManager.configure( {
 // As set in roles we need admin token to create resource and  a webUIToken to login
 // admin user and get its token.
 // Firstly webUIToken is needed so create this token expiring in 10 seconds
-var webUIToken=tokenManager.encode(
+var webUIToken=tokenManager.encodeToken(
         {
             subject:"generate token on fly"},"webUIToken",{unit:"seconds",value:10
 });
@@ -1052,7 +1052,7 @@ authms --> Auth.js
         
     // YOUR LOGIC
         
-    var token=tokenManager.encode(req.toTokenize,req.tokenType,req.tokenLife);
+    var token=tokenManager.encodeToken(req.toTokenize,req.tokenType,req.tokenLife);
 
     res.status(200).send({access_token:token});
 
@@ -1314,7 +1314,7 @@ tokenManager.configure( {
 
 // make admin login to get token.
 // to make a login webUIToken is needed so create this token that expires in 10 seconds
-var webUIToken=tokenManager.encode(
+var webUIToken=tokenManager.encodeToken(
     {subject:"generate token on fly"},"webUIToken",{unit:"seconds",value:10}
 );
 

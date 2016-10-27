@@ -69,7 +69,7 @@ exports.checkAuthorization =  function(req, res, next) {
                 }
             });
         }else{ // local Use
-            var decoded=this.decodeToken(token);
+            var decoded=decodeToken(token);
             if(decoded.valid){
                 var tokenType=decoded.tokenTypeClass;
                 var role=currentRoles[URI][req.method.toUpperCase()];
@@ -102,7 +102,7 @@ exports.checkAuthorization =  function(req, res, next) {
 
 
 exports.testAuth=function(token,URI,method,callback){
-    var decoded=this.decodeToken(token);
+    var decoded=decodeToken(token);
     if(decoded.valid){
         var tokenType=decoded.tokenTypeClass;
         var role=currentRoles[URI][method.toUpperCase()];
@@ -147,18 +147,22 @@ exports.encodeToken = function(dictionaryToEncode,tokenTypeClass,validFor){
     return encodedToken;
 };
 
-exports.decodeToken = function(token){
 
+function decodeToken(token){
     try {
         var decoded = jwt.decode(token, conf.secret);
         decoded.valid=true;
         return(decoded);
     } catch (err) {
         return ({
-           valid:false,
-           error_message:"The access_token is invalid or malformed"
+            valid:false,
+            error_message:"The access_token is invalid or malformed"
         });
     }
+};
+
+exports.decodeToken = function(token){
+    decodeToken(token);
 };
 
 exports.addRole=function(roles){
