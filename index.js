@@ -78,7 +78,7 @@ exports.checkAuthorization =  function(req, res, next) {
                         req[conf.decodedTokenFieldName] = decoded;
                         next();
                     } else {
-                        return res.status(401).send({error: 'Unauthorized', error_message: decoded.error_message});
+                        return res.status(401).send({error: 'Unauthorized', error_message: "You are not authorized to access this resource"});
                     }
                 }else{
                     return res.status(401).send({
@@ -88,7 +88,7 @@ exports.checkAuthorization =  function(req, res, next) {
                 }
 
             }else{
-               return res.status(400).send({error:"BadRequest", error_message:"token invalid or malformed"})
+               return res.status(400).send({error:"BadRequest", error_message:decoded.error_message})
             }
         }
 
