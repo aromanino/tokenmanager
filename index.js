@@ -136,7 +136,7 @@ exports.testAuth=function(token,URI,method,callback){
             if (_.contains(role, tokenType)) {
                 callback(null,decoded)
             } else {
-                return callback(401,{error: 'Unauthorized', error_message: decoded.error_message});
+                return callback(401,{error: 'Unauthorized', error_message:"You are not authorized to access this resource" });
             }
         }else{
             return callback(401,{
@@ -145,7 +145,7 @@ exports.testAuth=function(token,URI,method,callback){
             });
         }
     }else{
-        return callback(400,{error:"BadRequest", error_message:"token invalid or malformed"});
+        return callback(400,{error:"BadRequest", error_message:decoded.error_message});
     }
 };
 
