@@ -23,12 +23,24 @@ exports.checkAuthorization =  function(req, res, next) {
 
     if (token) {
 
-            var URI;
-            var path = (req.route.path == "/") ? "" : req.route.path;
-            if (_.isEmpty(req.baseUrl))
-                URI = path;
-            else
-                URI = req.baseUrl + path;
+            // var URI;
+            // var path = (req.route.path == "/") ? "" : req.route.path;
+            // if (_.isEmpty(req.baseUrl))
+            //     URI = path;
+            // else
+            //     URI = req.baseUrl + path;
+
+
+        var URI=(_.isEmpty(req.baseUrl)) ? req.route.path : (req.baseUrl+req.route.path) ;
+
+
+        console.log("**************************************************");
+        console.log("req.route.path:" +req.route.path);
+        console.log("req.path:" +req.path);
+        console.log("req.baseUrl:" +req.baseUrl);
+        console.log("URI:" +URI);
+        console.log("**************************************************");
+
 
         if(conf.authorizationMicroservice.url) { // microservice use
             var rqparams = {
