@@ -230,7 +230,7 @@ exports.downgradeRole=function(roles){
 
 
 exports.getRoles=function(){
-    return(JSON.parse(currentRoles));
+    return(currentRoles);
 };
 
 exports.resetRoles=function(){
