@@ -128,6 +128,7 @@ exports.checkAuthorization =  function(req, res, next) {
 
 exports.testAuth=function(token,URI,method,callback){
     var decoded=decodeToken(token);
+    URI=URI.endsWith("/") ? URI : URI+"/";
     if(decoded.valid){
         var tokenType=decoded.tokenTypeClass;
         var role=currentRoles[URI][method.toUpperCase()];
