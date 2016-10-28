@@ -37,12 +37,12 @@ exports.checkAuthorization =  function(req, res, next) {
         URI=URI.endsWith("/") ? URI : URI+"/";
 
 
-        console.log("**************************************************");
-        console.log("req.route.path:" +req.route.path);
-        console.log("req.path:" +req.path);
-        console.log("req.baseUrl:" +req.baseUrl);
-        console.log("URI:" +URI);
-        console.log("**************************************************");
+        // console.log("**************************************************");
+        // console.log("req.route.path:" +req.route.path);
+        // console.log("req.path:" +req.path);
+        // console.log("req.baseUrl:" +req.baseUrl);
+        // console.log("URI:" +URI);
+        // console.log("**************************************************");
 
 
         if(conf.authorizationMicroservice.url) { // microservice use
