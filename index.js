@@ -191,6 +191,7 @@ exports.decodeToken = function(token){
 exports.addRole=function(roles){
     var role,method;
     async.eachSeries(roles,function(value,callback){
+        value.URI=value.URI.endsWith("/") ? value.URI : value.URI+"/";
         role=currentRoles[value.URI]||{POST:[],GET:[],PUT:[],DELETE:[]};
         method=value.method.toUpperCase();
         if (method=="DEL") method= "DELETE";
@@ -204,6 +205,7 @@ exports.addRole=function(roles){
 exports.upgradeRole=function(roles){
 
     async.eachSeries(roles,function(value,callback){
+        value.URI=value.URI.endsWith("/") ? value.URI : value.URI+"/";
         role=currentRoles[value.URI]||{POST:[],GET:[],PUT:[],DELETE:[]};
         method=value.method.toUpperCase();
         if (method=="DEL") method= "DELETE";
@@ -219,6 +221,7 @@ exports.upgradeRole=function(roles){
 exports.downgradeRole=function(roles){
 
     async.eachSeries(roles,function(value,callback){
+        value.URI=value.URI.endsWith("/") ? value.URI : value.URI+"/";
         role=currentRoles[value.URI]||{POST:[],GET:[],PUT:[],DELETE:[]};
         method=value.method.toUpperCase();
         if (method=="DEL") method= "DELETE";
