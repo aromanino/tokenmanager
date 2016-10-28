@@ -211,6 +211,7 @@ exports.upgradeRole=function(roles){
         role=currentRoles[value.URI]||{POST:[],GET:[],PUT:[],DELETE:[]};
         method=value.method.toUpperCase();
         if (method=="DEL") method= "DELETE";
+        value.authToken=_.difference(role[method],value.authToken);
         newRole=role[method].concat(value.authToken);
         role[method]=newRole;
         currentRoles[value.URI]=role;
