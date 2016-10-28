@@ -84,15 +84,25 @@ exports.checkAuthorization =  function(req, res, next) {
             let decoded=decodeToken(token);
             if(decoded.valid){
                 var tokenType=decoded.tokenTypeClass;
-                var role=currentRoles[URI][req.method.toUpperCase()];
-                if(role) {
-                    if (_.contains(role, tokenType)) {
-                        req[conf.decodedTokenFieldName] = decoded;
-                        next();
+                try {
+                    var role = currentRoles[URI][req.method.toUpperCase()];
+                    if (role) {
+                        if (_.contains(role, tokenType)) {
+                            req[conf.decodedTokenFieldName] = decoded;
+                            next();
+                        } else {
+                            return res.status(401).send({
+                                error: 'Unauthorized',
+                                error_message: "You are not authorized to access this resource"
+                            });
+                        }
                     } else {
-                        return res.status(401).send({error: 'Unauthorized', error_message: "You are not authorized to access this resource"});
+                        return res.status(401).send({
+                            error: "BadRequest",
+                            error_message: "No auth roles defined for: " + req.method + " " + URI
+                        });
                     }
-                }else{
+                } catch (ex){
                     return res.status(401).send({
                         error: "BadRequest",
                         error_message: "No auth roles defined for: " + req.method + " " + URI
