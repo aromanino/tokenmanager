@@ -175,10 +175,19 @@ exports.encodeToken = function(dictionaryToEncode,tokenTypeClass,validFor){
 
 
 function decodeToken(token){
+
     try {
         var decoded = jwt.decode(token, conf.secret);
-        decoded.valid=true;
-        return(decoded);
+
+        if (decoded.exp <= Date.now()) {
+            return ({
+                valid:false,
+                error_message:"The access_token is expired"
+            });
+        }else{
+            decoded.valid=true;
+            return(decoded);
+        }
     } catch (err) {
         return ({
             valid:false,
