@@ -31,7 +31,9 @@ exports.checkAuthorization =  function(req, res, next) {
             //     URI = req.baseUrl + path;
 
 
-        var URI=(_.isEmpty(req.baseUrl)) ? req.route.path : (req.baseUrl+req.route.path) ;
+
+        var path= req.route.path || req.path;
+        var URI=(_.isEmpty(req.baseUrl)) ? path : (req.baseUrl+path) ;
         URI=URI.endsWith("/") ? URI : URI+"/";
 
 
