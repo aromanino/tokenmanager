@@ -212,9 +212,6 @@ exports.upgradeRole=function(roles){
         method=value.method.toUpperCase();
         if (method=="DEL") method= "DELETE";
         role[method]=_.union(role[method],value.authToken);
-        value.authToken=_.difference(role[method],value.authToken);
-        newRole=value.authToken;
-        role[method]=newRole;
         currentRoles[value.URI]=role;
         callback();
     });
