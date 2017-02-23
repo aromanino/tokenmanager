@@ -3,6 +3,7 @@ This module deals with the management of JWT tokens used for the protection of o
 It enables encoding and decoding of the token itself and the definition of rules that allow
 to determine if a token type is enabled or not to access a given resource.
 
+[![NPM](https://nodei.co/npm/tokenmanager.png?downloads=true&downloadRank=true&stars=true)![NPM](https://nodei.co/npm-dl/tokenmanager.png?months=6&height=3)](https://nodei.co/npm/tokenmanager/)
 
 This package and in particular mode  **checkAuthorization** middleware can be used in two modes:
 
