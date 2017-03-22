@@ -63,22 +63,46 @@ exports.checkAuthorization =  function(req, res, next) {
 
                 if (error) {
                     console.log("ERROR:" + error);
-                    return res.status(500).send({error: 'internal_microservice_error', error_message: error + " "});
+                    if(!(_.isEmpty(conf.errorFieldName))){
+                        req[conf.errorFieldName]={error: 'internal_microservice_error', error_message: error + " "};
+                        next();
+                    }else {
+                        return res.status(500).send({error: 'internal_microservice_error', error_message: error + " "});
+                    }
                 } else {
 
                     decoded = JSON.parse(body);
 
                     if (_.isUndefined(decoded.valid)) {
+                        if(!(_.isEmpty(conf.errorFieldName))){
+                            req[conf.errorFieldName]={
+                                error: decoded.error,
+                                error_message: decoded.error_message
+                            };
+                            next();
+                        }else {
                         return res.status(response.statusCode).send({
                             error: decoded.error,
                             error_message: decoded.error_message
                         });
+                        }
                     } else {
                         if (decoded.valid == true) {
                             req[conf.decodedTokenFieldName] = decoded.token;
                             next();
                         } else {
-                            return res.status(401).send({error: 'Unauthorized', error_message: decoded.error_message});
+                            if(!(_.isEmpty(conf.errorFieldName))){
+                                req[conf.errorFieldName]={
+                                    error: 'Unauthorized',
+                                    error_message: decoded.error_message
+                                };
+                                next();
+                            }else {
+                                return res.status(401).send({
+                                    error: 'Unauthorized',
+                                    error_message: decoded.error_message
+                                });
+                            }
                         }
                     }
                 }
@@ -94,33 +118,73 @@ exports.checkAuthorization =  function(req, res, next) {
                             req[conf.decodedTokenFieldName] = decoded;
                             next();
                         } else {
-                            return res.status(401).send({
-                                error: 'Unauthorized',
-                                error_message: "You are not authorized to access this resource"
-                            });
+                            if(!(_.isEmpty(conf.errorFieldName))){
+                                req[conf.errorFieldName]={
+                                    error: 'Unauthorized',
+                                    error_message: "You are not authorized to access this resource"
+                                };
+                                next();
+                            }else {
+                                return res.status(401).send({
+                                    error: 'Unauthorized',
+                                    error_message: "You are not authorized to access this resource"
+                                });
+                            }
                         }
                     } else {
+                        if(!(_.isEmpty(conf.errorFieldName))){
+                            req[conf.errorFieldName]={
+                                error: "BadRequest",
+                                error_message: "No auth roles defined for: " + req.method + " " + URI
+                            };
+                            next();
+                        }else {
+                            return res.status(401).send({
+                                error: "BadRequest",
+                                error_message: "No auth roles defined for: " + req.method + " " + URI
+                            });
+                        }
+                    }
+                } catch (ex){
+                    if(!(_.isEmpty(conf.errorFieldName))){
+                        req[conf.errorFieldName]={
+                            error: "BadRequest",
+                            error_message: "No auth roles defined for: " + req.method + " " + URI
+                        };
+                        next();
+                    }else {
                         return res.status(401).send({
                             error: "BadRequest",
                             error_message: "No auth roles defined for: " + req.method + " " + URI
                         });
                     }
-                } catch (ex){
-                    return res.status(401).send({
-                        error: "BadRequest",
-                        error_message: "No auth roles defined for: " + req.method + " " + URI
-                    });
                 }
 
             }else{
-               return res.status(400).send({error:"BadRequest", error_message:decoded.error_message})
+                if(!(_.isEmpty(conf.errorFieldName))){
+                    req[conf.errorFieldName]={error: "BadRequest", error_message: decoded.error_message};
+                    next();
+                }else {
+                    return res.status(400).send({error: "BadRequest", error_message: decoded.error_message})
+                }
             }
         }
 
     } else {
-        return res.status(400)
-            .set({'WWW-Authenticate':'Bearer realm='+exampleUrl+', error="invalid_request", error_message="The access token is required"'})
-            .send({error:"invalid_request",error_message:"Unauthorized: Access token required, you are not allowed to use the resource"});
+        if(!(_.isEmpty(conf.errorFieldName))){
+            req[conf.errorFieldName]={
+                error: "invalid_request",
+                error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
+            };
+            next();
+        }else {
+            return res.status(400)
+                .set({'WWW-Authenticate': 'Bearer realm=' + exampleUrl + ', error="invalid_request", error_message="The access token is required"'})
+                .send({
+                    error: "invalid_request",
+                    error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
+                });
+        }
     }
 
 };

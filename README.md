@@ -9,7 +9,7 @@ This package and in particular mode  **checkAuthorization** middleware can be us
 
 1.  In a distributed architecture calling an external service that manages
     tokens(for example in a microservice architecture)
-2.  In a monolithic application managing tokens Locally
+2.  In a monolithic application managing tokens locally
 
 If used locally you must manage tokens and authorizations with encode, decode, addRole, upgradeRole
 and downgradeRole functions.
@@ -114,8 +114,12 @@ For example: ```http://example.com:3000/checkIfTokenIsAuth ```
 if the middleware is used to call an external service that manages tokens(for example in a microservice architecture)
 it contains the token to access this external service
 
-##### exampleUrl (dictionary)
+##### exampleUrl (String)
 String containing the domain of your application used in middleware response message.
+
+##### errorFieldName (String) 
+If set, on error, the tokenmanager middleware does not respond directly with req.send(content) but add in the express request 
+param(req) a field called "errorFieldName" containing the response content. 
 
 
 ### <a name="middleware"></a>`middleware checkAuthorization`
@@ -1147,8 +1151,7 @@ Users.js --> File to manage Users in userms microservce. It call authms to get a
  var request=require('request');
 
  tokenManager.configure( {
-      "decodedTokenFieldName":"UserToken", // Add token in UserToken field
-      "secret":"MyKey",                    // secret key to encode/decode token
+      "decodedTokenFieldName":"UserToken", // Add token in UserToken field      
       "exampleUrl":"http://miosito.it",
       "authorizationMicroserviceUrl":"http://authms.com/checkAuthorization"
  });

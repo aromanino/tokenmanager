@@ -8,7 +8,8 @@ var config = {
     decodedTokenFieldName: "UserToken",
     tokenFieldName: "access_token",
     exampleUrl: "http://MyPage.it/",
-    secret: "secretKey"
+    secret: "secretKey",
+    errorFieldName:""
 
 
 };
