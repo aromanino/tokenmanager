@@ -330,7 +330,7 @@ exports.configure =  function(config) {
     conf.exampleUrl = config.exampleUrl || conf.exampleUrl;
     conf.tokenFieldName= config.tokenFieldName || conf.tokenFieldName;
     conf.secret= config.secret || conf.secret;
-    conf.answerOnTheFly= config.answerOnTheFly || conf.answerOnTheFly;
+    conf.answerOnTheFly= _.isUndefined(config.answerOnTheFly) ? conf.answerOnTheFly : config.answerOnTheFly;
 };
 
 exports.encodeToken = function(dictionaryToEncode,tokenTypeClass,validFor){
