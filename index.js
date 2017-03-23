@@ -41,7 +41,7 @@ exports.checkTokenValidity =  function(req, res, next) {
                     console.log("ERROR:" + error);
                     if(!(conf.answerOnTheFly)){
                         req[conf.decodedTokenFieldName]={
-                                error_code:1,
+                                error_code:"1",
                                 error: 'InternalError',
                                 error_message: error + " "
                         };
@@ -59,7 +59,7 @@ exports.checkTokenValidity =  function(req, res, next) {
                     } else {
                         if(!(conf.answerOnTheFly)){
                             req[conf.decodedTokenFieldName]={
-                                error_code:2,
+                                error_code:"2",
                                 error: 'BadRequest',
                                 error_message: decoded.error_message
                             };
@@ -82,7 +82,7 @@ exports.checkTokenValidity =  function(req, res, next) {
             }else{
                 if(!(conf.answerOnTheFly)){
                     req[conf.decodedTokenFieldName]={
-                        error_code:2,
+                        error_code:"2",
                         error: "BadRequest",
                         error_message: decoded.error_message
                     };
@@ -97,7 +97,7 @@ exports.checkTokenValidity =  function(req, res, next) {
         if(!(conf.answerOnTheFly)){
             req[conf.decodedTokenFieldName]={
                 valid:"false",
-                error_code: 0,
+                error_code: "0",
                 error:"BadRequest",
                 error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
             };

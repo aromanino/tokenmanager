@@ -131,7 +131,7 @@ On error/invalid_token if "answerOnTheFly" is set false, express request param c
 param containing a object so defined: 
 ```javascript
 {
-    "error_code":" Used only in checkTokenValidity midleware, containing error code number",
+    "error_code":" Used only in checkTokenValidity midleware, containing error code String",
     "error":"Containing error Type name"
     "error":"contain error code description"     
 }
@@ -208,15 +208,15 @@ If an error occurs or token is not valid the middleware, can send response on th
 field whose name is defined in "decodedTokenFieldName" config param containing a object so defined: 
 ```javascript
 {  
-  "error_code":"error number"  
+  "error_code":"error code String"  
   "error":"Containing error Type name"
   "error":"contain error code description"     
 }
 ```
 possible error_code values:
-* 0: access_token required
-* 1: internal error
-* 2: invalid or expired access_token
+* "0": (String) access_token required
+* "1": (String) internal error
+* "2": (String) invalid or expired access_token
 
 If this middleware is not used locally but call an external service that manage tokens, external service must be have
 an endpoint in "post" method whose URL is set in "tokenValidityUrl" config param. That endpoint accept body like this:
