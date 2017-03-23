@@ -31,7 +31,7 @@ exports.checkTokenValidity =  function(req, res, next) {
                     'Authorization': "Bearer " + conf.authorizationMicroservice.access_token,
                     'content-type': 'application/json'
                 },
-                body: JSON.stringify({decode_token: token, URI: URI, method: req.method})
+                body: JSON.stringify({decode_token: token})
             };
             let decoded = null;
 
