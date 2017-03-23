@@ -19,6 +19,7 @@ and downgradeRole functions.
  * [Using tokenmanager](#using)
     * [function configure(config)](#configure)
     * [checkAuthorization middleware](#middleware)
+    * [checkTokenValidity middleware](#tokenValid)
     * [manage token](#manage)
         * [function encodeToken(dictionaryToEncode,tokenTypeClass,validFor)](#encode)
         * [function decodeToken(token)](#decode)
@@ -105,9 +106,14 @@ If the middleware is used locally( not use an external service that manages toke
 secret key used to encode/decode token in **encode** and **decode** function
 
 
-##### url (String)
+##### authorizationMicroserviceUrl (String)
 if the **checkAuthorization** middleware is used to call an external service that manages tokens(for example in
 a microservice architecture). It contains the url of this external service.
+For example: ```http://example.com:3000/checkIfTokenIsAuth ```
+
+##### authorizationMicroserviceEncodeTokenUrl (String)
+if the **checkTokenValidity** middleware is used to call an external service that manages tokens(for example in
+a microservice architecture). It contains the url of this external service that encoded token.
 For example: ```http://example.com:3000/checkIfTokenIsAuth ```
 
 ##### authorizationMicroserviceToken (String)
@@ -117,28 +123,58 @@ it contains the token to access this external service
 ##### exampleUrl (String)
 String containing the domain of your application used in middleware response message.
 
-##### errorFieldName (String) 
-If set, on error, the tokenmanager middleware does not respond directly with req.send(content) but add in the express request 
-param(req) a field called "errorFieldName" containing the response content. 
-
+##### answerOnTheFly (Boolean) 
+If set false, on error/invalid_token, the tokenmanager middlewares checkAuthorization/checkTokenValidity does not respond directly 
+with req.send(content) but forward the error response in the express request param in a filed whose name is defined in a "decodedTokenFieldName" 
+param.  
+On error/invalid_token if "answerOnTheFly" is set false, express request param contain a field whose name is defined in "decodedTokenFieldName" 
+param containing a object so defined: 
+```javascript
+{
+    "error_code":" Used only in checkTokenValidity midleware, containing error code number",
+    "error":"Containing error Type name"
+    "error":"contain error code description"     
+}
+```
 
 ### <a name="middleware"></a>`middleware checkAuthorization`
 This middleware must be used to decode, validate, e verify token authorization.
-It read the request access_token field sent by header or body or query params, encodes and verifies the client token
-and, if valid and authorized, in the request(req) it is added a field (name set in config function "decodedTokenFieldName"),
-containing the decode result. If token is not valid or authorized to access the resource the middleware send a response
-401 Unauthorized.
+It read the request access_token field sent by header or body or query params, encodes and verifies token
+and, if valid and authorized, in the express request(req) it is added a field (name set in config field "decodedTokenFieldName"),
+containing the decode result. 
+If an error occurs or token is not valid or authorised to access that resource, the middleware, can send a 401 Unauthorized response if 
+"answerOnTheFly" is set true in config parameter, otherwise  if "answerOnTheFly" is set false, express request param contain a 
+field whose name is defined in "decodedTokenFieldName" config param containing a object so defined: 
+```javascript
+{  
+  "error":"Containing error Type name"
+  "error":"contain error code description"     
+}
+```
+
 If this middleware is not used locally but call an external service that manage tokens, external service must be have
-an endpoint in "post" method that accept three body params as this:
+an endpoint in "post" method whose URL is set in "url" config param. That endpoint accept three body params like this:
 
   body params: {decode_token: token, URI: URI, method: req.method}
-
+  
 where:
 * decode_token: string containing access token used to call the resource in URI with method in field "method"
 * URI: String containing the calling resource
 * method: String containing the calling method used to access the resource in URI
 
+and the enpoint response is an object defined as bellow:
+ 
+ response ==> {valid:"", error:"", error_message: ""}
 
+  
+where:
+* valid: It is an optional field containing a boolean value. If true access_token can access the resource otherwise is not Authorised or expired 
+* token: It is an optional field containing the decoded token dictionary. It is returned only when token is encoded 
+* error: It is an optional String field containing the error name. Returned only if an error occurs(for example Internal Error in DB query)
+* error_message: It is an optional String field containing the error message. Always returned if:
+    * "valid" field is false. In this case contain the reason(for example token expired or malformed) 
+    *  "error" field is set. In this case contain the message that explain the error
+    
 
 middleware checkAuthorization example:
 
@@ -148,13 +184,77 @@ var tokenManager = require('tokenmanager');
 tokenManager.configure( {
     "decodedTokenFieldName":"UserToken",
     "authorizationMicroserviceUrl":"localhost:3000",
-    "access_token":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3jhk4g",
+    "authorizationMicroserviceToken":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3jhk4g",
     "exampleUrl":"http://miosito.it"
 });
 
 router.get('/resource', tokenManager.checkAuthorization, function(req,res){
 
     // if you are in here the token is valid and authorized
+
+    console.log("Decoded TOKEN:" + req.UserToken); // print the decode results
+
+});
+
+```
+
+### <a name="tokenValid"></a>`middleware checkTokenValidity`
+This middleware must be used to decode, validate token.
+It read the request access_token field sent by header or body or query params, encodes and verifies token
+if valid and authorized, in the express request(req) it is added a field (name set in config field "decodedTokenFieldName"),
+containing the decode result.  
+If an error occurs or token is not valid the middleware, can send response on the fly if 
+"answerOnTheFly" is set true in config parameter, otherwise  if "answerOnTheFly" is set false, express request param contain a 
+field whose name is defined in "decodedTokenFieldName" config param containing a object so defined: 
+```javascript
+{  
+  "error_code":"error number"  
+  "error":"Containing error Type name"
+  "error":"contain error code description"     
+}
+```
+possible error_code values:
+* 0: access_token required
+* 1: internal error
+* 2: invalid or expired access_token
+
+If this middleware is not used locally but call an external service that manage tokens, external service must be have
+an endpoint in "post" method whose URL is set in "tokenValidityUrl" config param. That endpoint accept body like this:
+
+  body params: {decode_token: token}
+  
+where:
+* decode_token: string containing access_token to encode and check validity
+
+The enpoint response is an object defined as bellow:
+ 
+ response ==> {valid:"", error:"", error_message: ""}
+
+  
+where:
+* valid: It is an optional field containing a boolean value. If true access_token is valid otherwise is not valid
+* token: It is an optional field containing the decoded token dictionary. It is returned only when token is encoded 
+* error: It is an optional String field containing the error name. Returned only if an error occurs(for example Internal Error in DB query)
+* error_message: It is an optional String field containing the error message. Always returned if:
+    * "valid" field is false. In this case contain the reason(for example token expired or malformed) 
+    *  "error" field is set. In this case contain the message that explain the error
+    
+
+middleware checkTokenValidity example:
+
+```javascript
+var router = require('express').Router();
+var tokenManager = require('tokenmanager');
+tokenManager.configure( {
+    "decodedTokenFieldName":"UserToken",
+    "authorizationMicroserviceEncodeTokenUrl":"localhost:3000",
+    "authorizationMicroserviceToken":"4343243v3kjh3k4g3j4hk3g43hjk4g3jh41h34g3jhk4g",
+    "exampleUrl":"http://miosito.it"
+});
+
+router.get('/resource', tokenManager.checkTokenValidity, function(req,res){
+
+    // if you are in here the token is encoded
 
     console.log("Decoded TOKEN:" + req.UserToken); // print the decode results
 
@@ -1128,10 +1228,10 @@ authms --> Auth.js
     tokenManager.test(tokenToDecode,URI,method,function(err,retValue){
         if(err) return res.status(err).send(retValue);
 
-        if (_.isUndefined(decoded.valid)) {
+        if (_.isUndefined(retValue.valid)) {
                 return res.status(401).send(retValue);
         } else {
-                if (decoded.valid == true) {
+                if (retValue.valid == true) {
                     return res.status(200).send(retValue);
                 } else {
                     return res.status(401).send(retValue);

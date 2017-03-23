@@ -7,6 +7,116 @@ var jwt = require('jwt-simple');
 var async=require('async');
 var currentRoles={};
 
+
+
+exports.checkTokenValidity =  function(req, res, next) {
+
+    var token = (req.body && req.body.access_token) || (req.query && req.query.access_token); // || req.headers['x-access-token'];
+    if (req.headers['authorization']) {
+        var value = req.headers['authorization'];
+        header = value.split(" ");
+        if (header.length == 2)
+            if (header[0] == "Bearer") {
+                token = header[1];
+            }
+    }
+
+    var exampleUrl = conf.exampleUrl;
+
+    if (token) {
+        if(conf.authorizationMicroservice.tokenValidityUrl) { // microservice use
+            var rqparams = {
+                url: conf.authorizationMicroservice.tokenValidityUrl,
+                headers: {
+                    'Authorization': "Bearer " + conf.authorizationMicroservice.access_token,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({decode_token: token, URI: URI, method: req.method})
+            };
+            let decoded = null;
+
+            request.post(rqparams, function (error, response, body) {
+
+                if (error) {
+                    console.log("ERROR:" + error);
+                    if(!(conf.answerOnTheFly)){
+                        req[conf.decodedTokenFieldName]={
+                                error_code:1,
+                                error: 'InternalError',
+                                error_message: error + " "
+                        };
+                        next();
+                    }else {
+                        return res.status(500).send({error: 'InternalError', error_message: error + " "});
+                    }
+                } else {
+
+                    decoded = JSON.parse(body);
+
+                    if (decoded.valid == true) {
+                        req[conf.decodedTokenFieldName] = decoded.token;
+                        next();
+                    } else {
+                        if(!(conf.answerOnTheFly)){
+                            req[conf.decodedTokenFieldName]={
+                                error_code:2,
+                                error: 'BadRequest',
+                                error_message: decoded.error_message
+                            };
+                            next();
+                        }else {
+                            return res.status(401).send({
+                                error: 'BadRequest',
+                                error_message: decoded.error_message
+                            });
+                        }
+                    }
+
+                }
+            });
+        }else{ // local Use
+            let decoded=decodeToken(token);
+            if(decoded.valid){
+                req[conf.decodedTokenFieldName] = decoded;
+                next();
+            }else{
+                if(!(conf.answerOnTheFly)){
+                    req[conf.decodedTokenFieldName]={
+                        error_code:2,
+                        error: "BadRequest",
+                        error_message: decoded.error_message
+                    };
+                    next();
+                }else {
+                    return res.status(400).send({error: "BadRequest", error_message: decoded.error_message})
+                }
+            }
+        }
+
+    } else {
+        if(!(conf.answerOnTheFly)){
+            req[conf.decodedTokenFieldName]={
+                valid:"false",
+                error_code: 0,
+                error:"BadRequest",
+                error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
+            };
+            next();
+        }else {
+            return res.status(400)
+                .set({'WWW-Authenticate': 'Bearer realm=' + exampleUrl + ', error="invalid_request", error_message="The access token is required"'})
+                .send({
+                    error: "BadRequest",
+                    error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
+                });
+        }
+    }
+
+};
+
+
+
+
 exports.checkAuthorization =  function(req, res, next) {
 
     var token = (req.body && req.body.access_token) || (req.query && req.query.access_token); // || req.headers['x-access-token'];
@@ -62,20 +172,19 @@ exports.checkAuthorization =  function(req, res, next) {
 
 
                 if (error) {
-                    console.log("ERROR:" + error);
-                    if(!(_.isEmpty(conf.errorFieldName))){
-                        req[conf.errorFieldName]={error: 'internal_microservice_error', error_message: error + " "};
+                    if(!(conf.answerOnTheFly)){
+                        req[conf.decodedTokenFieldName]={error: 'InternalError', error_message: error + " "};
                         next();
                     }else {
-                        return res.status(500).send({error: 'internal_microservice_error', error_message: error + " "});
+                        return res.status(500).send({error: 'InternalError', error_message: error + " "});
                     }
                 } else {
 
                     decoded = JSON.parse(body);
 
                     if (_.isUndefined(decoded.valid)) {
-                        if(!(_.isEmpty(conf.errorFieldName))){
-                            req[conf.errorFieldName]={
+                        if(!(conf.answerOnTheFly)){
+                            req[conf.decodedTokenFieldName]={
                                 error: decoded.error,
                                 error_message: decoded.error_message
                             };
@@ -91,8 +200,8 @@ exports.checkAuthorization =  function(req, res, next) {
                             req[conf.decodedTokenFieldName] = decoded.token;
                             next();
                         } else {
-                            if(!(_.isEmpty(conf.errorFieldName))){
-                                req[conf.errorFieldName]={
+                            if(!(conf.answerOnTheFly)){
+                                req[conf.decodedTokenFieldName]={
                                     error: 'Unauthorized',
                                     error_message: decoded.error_message
                                 };
@@ -118,8 +227,8 @@ exports.checkAuthorization =  function(req, res, next) {
                             req[conf.decodedTokenFieldName] = decoded;
                             next();
                         } else {
-                            if(!(_.isEmpty(conf.errorFieldName))){
-                                req[conf.errorFieldName]={
+                            if(!(conf.answerOnTheFly)){
+                                req[conf.decodedTokenFieldName]={
                                     error: 'Unauthorized',
                                     error_message: "You are not authorized to access this resource"
                                 };
@@ -132,8 +241,8 @@ exports.checkAuthorization =  function(req, res, next) {
                             }
                         }
                     } else {
-                        if(!(_.isEmpty(conf.errorFieldName))){
-                            req[conf.errorFieldName]={
+                        if(!(conf.answerOnTheFly)){
+                            req[conf.decodedTokenFieldName]={
                                 error: "BadRequest",
                                 error_message: "No auth roles defined for: " + req.method + " " + URI
                             };
@@ -146,8 +255,8 @@ exports.checkAuthorization =  function(req, res, next) {
                         }
                     }
                 } catch (ex){
-                    if(!(_.isEmpty(conf.errorFieldName))){
-                        req[conf.errorFieldName]={
+                    if(!(conf.answerOnTheFly)){
+                        req[conf.decodedTokenFieldName]={
                             error: "BadRequest",
                             error_message: "No auth roles defined for: " + req.method + " " + URI
                         };
@@ -161,8 +270,8 @@ exports.checkAuthorization =  function(req, res, next) {
                 }
 
             }else{
-                if(!(_.isEmpty(conf.errorFieldName))){
-                    req[conf.errorFieldName]={error: "BadRequest", error_message: decoded.error_message};
+                if(!(conf.answerOnTheFly)){
+                    req[conf.decodedTokenFieldName]={error: "BadRequest", error_message: decoded.error_message};
                     next();
                 }else {
                     return res.status(400).send({error: "BadRequest", error_message: decoded.error_message})
@@ -171,8 +280,8 @@ exports.checkAuthorization =  function(req, res, next) {
         }
 
     } else {
-        if(!(_.isEmpty(conf.errorFieldName))){
-            req[conf.errorFieldName]={
+        if(!(conf.answerOnTheFly)){
+            req[conf.decodedTokenFieldName]={
                 error: "invalid_request",
                 error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
             };
@@ -216,10 +325,12 @@ exports.testAuth=function(token,URI,method,callback){
 exports.configure =  function(config) {
     conf.decodedTokenFieldName= config.decodedTokenFieldName || conf.decodedTokenFieldName;
     conf.authorizationMicroservice.url=config.authorizationMicroserviceUrl || conf.authorizationMicroservice.url;
+    conf.authorizationMicroservice.tokenValidityUrl=config.authorizationMicroserviceEncodeTokenUrl || conf.authorizationMicroservice.tokenValidityUrl;
     conf.authorizationMicroservice.access_token=config.authorizationMicroserviceToken || conf.authorizationMicroservice.access_token;
     conf.exampleUrl = config.exampleUrl || conf.exampleUrl;
     conf.tokenFieldName= config.tokenFieldName || conf.tokenFieldName;
     conf.secret= config.secret || conf.secret;
+    conf.answerOnTheFly= config.answerOnTheFly || conf.answerOnTheFly;
 };
 
 exports.encodeToken = function(dictionaryToEncode,tokenTypeClass,validFor){
