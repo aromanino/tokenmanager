@@ -63,11 +63,17 @@ function checkTokenValidityFunction(req, res, next) {
                         req[conf.decodedTokenFieldName]={
                                 error_code:"1",
                                 error: 'InternalError',
-                                error_message: error + " "
+                                error_message: error + " ",
+                                valid:false
                         };
                         next();
                     }else {
-                        return res.status(500).send({error: 'InternalError', error_message: error + " "});
+                        return res.status(500).send({
+                            error: 'InternalError',
+                            error_message: error + " ",
+                            error_code:"2",
+                            valid:false
+                        });
                     }
                 } else {
 
@@ -79,6 +85,7 @@ function checkTokenValidityFunction(req, res, next) {
                     } else {
                         if(!(conf.answerOnTheFly)){
                             req[conf.decodedTokenFieldName]={
+                                valid:false,
                                 error_code:"2",
                                 error: 'BadRequest',
                                 error_message: decoded.error_message
@@ -86,7 +93,9 @@ function checkTokenValidityFunction(req, res, next) {
                             next();
                         }else {
                             return res.status(401).send({
+                                valid:false,
                                 error: 'BadRequest',
+                                error_code:"2",
                                 error_message: decoded.error_message
                             });
                         }
@@ -102,13 +111,19 @@ function checkTokenValidityFunction(req, res, next) {
             }else{
                 if(!(conf.answerOnTheFly)){
                     req[conf.decodedTokenFieldName]={
+                        valid:false,
                         error_code:"2",
                         error: "BadRequest",
                         error_message: decoded.error_message
                     };
                     next();
                 }else {
-                    return res.status(400).send({error: "BadRequest", error_message: decoded.error_message})
+                    return res.status(400).send({
+                        valid:false,
+                        error: "BadRequest",
+                        error_message: decoded.error_message,
+                        error_code:"2",
+                    })
                 }
             }
         }
@@ -116,7 +131,7 @@ function checkTokenValidityFunction(req, res, next) {
     } else {
         if(!(conf.answerOnTheFly)){
             req[conf.decodedTokenFieldName]={
-                valid:"false",
+                valid:false,
                 error_code: "0",
                 error:"BadRequest",
                 error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
@@ -127,7 +142,9 @@ function checkTokenValidityFunction(req, res, next) {
                 .set({'WWW-Authenticate': 'Bearer realm=' + exampleUrl + ', error="invalid_request", error_message="The access token is required"'})
                 .send({
                     error: "BadRequest",
-                    error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
+                    error_code: "0",
+                    error_message: "Unauthorized: Access token required, you are not allowed to use the resource",
+                    valid:false
                 });
         }
     }
@@ -176,10 +193,10 @@ function checkAuthorizationFunction(req, res, next) {
 
                 if (error) {
                     if(!(conf.answerOnTheFly)){
-                        req[conf.decodedTokenFieldName]={error: 'InternalError', error_message: error + " "};
+                        req[conf.decodedTokenFieldName]={valid:false,error: 'InternalError', error_message: error + " "};
                         next();
                     }else {
-                        return res.status(500).send({error: 'InternalError', error_message: error + " "});
+                        return res.status(500).send({valid:false,error: 'InternalError', error_message: error + " "});
                     }
                 } else {
 
@@ -189,7 +206,8 @@ function checkAuthorizationFunction(req, res, next) {
                         if(!(conf.answerOnTheFly)){
                             req[conf.decodedTokenFieldName]={
                                 error: decoded.error,
-                                error_message: decoded.error_message
+                                error_message: decoded.error_message,
+                                valid:false
                             };
                             next();
                         }else {
@@ -206,13 +224,15 @@ function checkAuthorizationFunction(req, res, next) {
                             if(!(conf.answerOnTheFly)){
                                 req[conf.decodedTokenFieldName]={
                                     error: 'Unauthorized',
-                                    error_message: decoded.error_message
+                                    error_message: decoded.error_message,
+                                    valid:false
                                 };
                                 next();
                             }else {
                                 return res.status(401).send({
                                     error: 'Unauthorized',
-                                    error_message: decoded.error_message
+                                    error_message: decoded.error_message,
+                                    valid:false
                                 });
                             }
                         }
@@ -233,13 +253,15 @@ function checkAuthorizationFunction(req, res, next) {
                             if(!(conf.answerOnTheFly)){
                                 req[conf.decodedTokenFieldName]={
                                     error: 'Unauthorized',
-                                    error_message: "You are not authorized to access this resource"
+                                    error_message: "You are not authorized to access this resource",
+                                    valid:false
                                 };
                                 next();
                             }else {
                                 return res.status(401).send({
                                     error: 'Unauthorized',
-                                    error_message: "You are not authorized to access this resource"
+                                    error_message: "You are not authorized to access this resource",
+                                    valid:false
                                 });
                             }
                         }
@@ -247,13 +269,15 @@ function checkAuthorizationFunction(req, res, next) {
                         if(!(conf.answerOnTheFly)){
                             req[conf.decodedTokenFieldName]={
                                 error: "BadRequest",
-                                error_message: "No auth roles defined for: " + req.method + " " + URI
+                                error_message: "No auth roles defined for: " + req.method + " " + URI,
+                                valid:false
                             };
                             next();
                         }else {
                             return res.status(401).send({
                                 error: "BadRequest",
-                                error_message: "No auth roles defined for: " + req.method + " " + URI
+                                error_message: "No auth roles defined for: " + req.method + " " + URI,
+                                valid:false
                             });
                         }
                     }
@@ -261,23 +285,25 @@ function checkAuthorizationFunction(req, res, next) {
                     if(!(conf.answerOnTheFly)){
                         req[conf.decodedTokenFieldName]={
                             error: "BadRequest",
-                            error_message: "No auth roles defined for: " + req.method + " " + URI
+                            error_message: "No auth roles defined for: " + req.method + " " + URI,
+                            valid:false
                         };
                         next();
                     }else {
                         return res.status(401).send({
                             error: "BadRequest",
-                            error_message: "No auth roles defined for: " + req.method + " " + URI
+                            error_message: "No auth roles defined for: " + req.method + " " + URI,
+                            valid:false
                         });
                     }
                 }
 
             }else{
                 if(!(conf.answerOnTheFly)){
-                    req[conf.decodedTokenFieldName]={error: "BadRequest", error_message: decoded.error_message};
+                    req[conf.decodedTokenFieldName]={valid:false,error: "BadRequest", error_message: decoded.error_message};
                     next();
                 }else {
-                    return res.status(400).send({error: "BadRequest", error_message: decoded.error_message})
+                    return res.status(400).send({valid:false,error: "BadRequest", error_message: decoded.error_message})
                 }
             }
         }
@@ -286,7 +312,8 @@ function checkAuthorizationFunction(req, res, next) {
         if(!(conf.answerOnTheFly)){
             req[conf.decodedTokenFieldName]={
                 error: "invalid_request",
-                error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
+                error_message: "Unauthorized: Access token required, you are not allowed to use the resource",
+                valid:false
             };
             next();
         }else {
@@ -294,7 +321,8 @@ function checkAuthorizationFunction(req, res, next) {
                 .set({'WWW-Authenticate': 'Bearer realm=' + exampleUrl + ', error="invalid_request", error_message="The access token is required"'})
                 .send({
                     error: "invalid_request",
-                    error_message: "Unauthorized: Access token required, you are not allowed to use the resource"
+                    error_message: "Unauthorized: Access token required, you are not allowed to use the resource",
+                    valid:false
                 });
         }
     }

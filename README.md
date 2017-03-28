@@ -125,31 +125,28 @@ it contains the token to access this external service
 ##### exampleUrl (String)
 String containing the domain of your application used in middleware response message.
 
-##### answerOnTheFly (Boolean) 
-If set false, on error/invalid_token, the tokenmanager middlewares checkAuthorization/checkTokenValidity does not respond directly 
-with req.send(content) but forward the error response in the express request param in a filed whose name is defined in a "decodedTokenFieldName" 
-param.  
-On error/invalid_token if "answerOnTheFly" is set false, express request param contain a field whose name is defined in "decodedTokenFieldName" 
-param containing a object so defined: 
-```javascript
-{
-    "error_code":" Used only in checkTokenValidity midleware, containing error code String",
-    "error":"Containing error Type name"
-    "error":"contain error code description"     
-}
-```
 
 ### <a name="middleware"></a>`middleware checkAuthorization`
 This middleware must be used to decode, validate, e verify token authorization. On error send response.
 It read the request access_token field sent by header or body or query params, encodes and verifies token
 and, if valid and authorized, in the express request(req) it is added a field (name set in config field "decodedTokenFieldName"),
-containing the decode result. 
+containing the decode result, like example below:
+   ```javascript
+   {   
+     "valid":true,  
+     "token":{
+              // token dictionary
+     }
+          
+   }
+   ```
 If an error occurs or token is not valid or authorised to access that resource, the middleware, 
 send a 401 Unauthorized response containing an object so defined: 
 ```javascript
 {  
+  "valid":false,
   "error":"Containing error Type name"
-  "error":"contain error code description"     
+  "error_message":"contain error code description"     
 }
 ```
 
@@ -203,11 +200,23 @@ router.get('/resource', tokenManager.checkAuthorization, function(req,res){
 This middleware must be used to decode, validate, e verify token authorization. On error don't send a response but set it in request param.
 It read the request access_token field sent by header or body or query params, encodes and verifies token
 and, if valid and authorized, in the express request(req) it is added a field (name set in config field "decodedTokenFieldName"),
-containing the decode result.  If an error occurs or token is not valid or authorised to 
+containing the decode result like example below:
+   ```javascript
+   {   
+     "valid":true,  
+     "token":{
+              // token dictionary
+     }
+          
+   }
+   ```
+
+If an error occurs or token is not valid or authorised to 
 access that resource, the middleware set in decode result field an object containing the error and error_message 
-like this bellow 
+like this example bellow 
 ```javascript
 {  
+ "valid":false,   
  "error": "invalid_request",
  "error_message": "Unauthorized: Access token required, you are not allowed to use the resource"   
 }
@@ -264,11 +273,21 @@ router.get('/resource', tokenManager.checkAuthorization, function(req,res){
 This middleware must be used to decode, validate token. On error or token is not valid, send a response
 It read the request access_token field sent by header or body or query params, encodes and verifies token
 if valid and authorized, in the express request(req) it is added a field (name set in config field "decodedTokenFieldName"),
-containing the decode result.  
+containing the decode results like example below :
+ ```javascript
+ {   
+   "valid":true,  
+   "token":{
+            // token dictionary
+   }
+        
+ }
+ ```
 If an error occurs or token is not valid, the middleware, send a response on the fly with 
 an object so defined: 
 ```javascript
 {   
+  "valid":false,  
   "error":"containing error Type name"
   "error_message":"containing error code description"     
 }
@@ -321,14 +340,23 @@ router.get('/resource', tokenManager.checkTokenValidity, function(req,res){
 This middleware must be used to decode, validate token.  On error don't send a response but set it in request param.
 It read the request access_token field sent by header or body or query params, encodes and verifies token
 if valid and authorized, in the express request(req) it is added a field (name set in config field "decodedTokenFieldName"),
-containing the decode result.  
+containing the decode result like example below:
+   ```javascript
+   {   
+     "valid":true,  
+     "token":{
+              // token dictionary
+     }
+          
+   }
+   ```
 If an error occurs or token is not valid, the middleware, in the express request, add a field whose name 
 is defined in "decodedTokenFieldName" config param, containing a object so defined: 
 ```javascript
 {  
   "error_code":"error code String"  
   "error":"Containing error Type name"
-  "error":"contain error code description"     
+  "error_message":"contain error code description"     
 }
 ```
 possible error_code values:
