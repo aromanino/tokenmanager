@@ -8,8 +8,28 @@ var async=require('async');
 var currentRoles={};
 
 
+exports.checkTokenValidity= function(req,res,next){
+    conf.answerOnTheFly=true;
+    checkTokenValidityFunction(req, res, next);
+};
 
-exports.checkTokenValidity =  function(req, res, next) {
+exports.checkTokenValidityOnReq= function(req,res,next){
+    conf.answerOnTheFly=false;
+    checkTokenValidityFunction(req, res, next);
+};
+
+exports.checkAuthorization= function(req,res,next){
+    conf.answerOnTheFly=true;
+    checkAuthorizationFunction(req, res, next);
+};
+
+exports.checkAuthorizationOnReq= function(req,res,next){
+    conf.answerOnTheFly=false;
+    checkAuthorizationFunction(req, res, next);
+};
+
+
+function checkTokenValidityFunction(req, res, next) {
 
     var token = (req.body && req.body.access_token) || (req.query && req.query.access_token); // || req.headers['x-access-token'];
     if (req.headers['authorization']) {
@@ -116,8 +136,7 @@ exports.checkTokenValidity =  function(req, res, next) {
 
 
 
-
-exports.checkAuthorization =  function(req, res, next) {
+function checkAuthorizationFunction(req, res, next) {
 
     var token = (req.body && req.body.access_token) || (req.query && req.query.access_token); // || req.headers['x-access-token'];
     if (req.headers['authorization']) {
@@ -133,26 +152,10 @@ exports.checkAuthorization =  function(req, res, next) {
 
     if (token) {
 
-            // var URI;
-            // var path = (req.route.path == "/") ? "" : req.route.path;
-            // if (_.isEmpty(req.baseUrl))
-            //     URI = path;
-            // else
-            //     URI = req.baseUrl + path;
-
-
 
         var path= (_.isEmpty(req.route)) ?  req.path : req.route.path;
         var URI=(_.isEmpty(req.baseUrl)) ? path : (req.baseUrl+path) ;
         URI=URI.endsWith("/") ? URI : URI+"/";
-
-
-        // console.log("**************************************************");
-        // console.log("req.route.path:" +req.route.path);
-        // console.log("req.path:" +req.path);
-        // console.log("req.baseUrl:" +req.baseUrl);
-        // console.log("URI:" +URI);
-        // console.log("**************************************************");
 
 
         if(conf.authorizationMicroservice.url) { // microservice use
@@ -297,6 +300,7 @@ exports.checkAuthorization =  function(req, res, next) {
     }
 
 };
+
 
 
 exports.testAuth=function(token,URI,method,callback){

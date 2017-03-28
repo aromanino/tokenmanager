@@ -1,6 +1,5 @@
 var config = {
 
-
     authorizationMicroservice: {
         url: null,
         access_token: null,
