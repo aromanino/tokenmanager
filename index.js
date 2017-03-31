@@ -64,7 +64,8 @@ function checkTokenValidityFunction(req, res, next) {
                                 error_code:"1",
                                 error: 'InternalError',
                                 error_message: error + " ",
-                                valid:false
+                                valid:false,
+                                access_token:token
                         };
                         next();
                     }else {
@@ -72,7 +73,8 @@ function checkTokenValidityFunction(req, res, next) {
                             error: 'InternalError',
                             error_message: error + " ",
                             error_code:"2",
-                            valid:false
+                            valid:false,
+                            access_token:token
                         });
                     }
                 } else {
@@ -88,7 +90,8 @@ function checkTokenValidityFunction(req, res, next) {
                                 valid:false,
                                 error_code:"2",
                                 error: 'BadRequest',
-                                error_message: decoded.error_message
+                                error_message: decoded.error_message,
+                                access_token:token
                             };
                             next();
                         }else {
@@ -96,7 +99,8 @@ function checkTokenValidityFunction(req, res, next) {
                                 valid:false,
                                 error: 'BadRequest',
                                 error_code:"2",
-                                error_message: decoded.error_message
+                                error_message: decoded.error_message,
+                                access_token:token
                             });
                         }
                     }
@@ -114,7 +118,8 @@ function checkTokenValidityFunction(req, res, next) {
                         valid:false,
                         error_code:"2",
                         error: "BadRequest",
-                        error_message: decoded.error_message
+                        error_message: decoded.error_message,
+                        access_token:token
                     };
                     next();
                 }else {
@@ -123,6 +128,7 @@ function checkTokenValidityFunction(req, res, next) {
                         error: "BadRequest",
                         error_message: decoded.error_message,
                         error_code:"2",
+                        access_token:token
                     })
                 }
             }
@@ -193,7 +199,7 @@ function checkAuthorizationFunction(req, res, next) {
 
                 if (error) {
                     if(!(conf.answerOnTheFly)){
-                        req[conf.decodedTokenFieldName]={valid:false,error: 'InternalError', error_message: error + " "};
+                        req[conf.decodedTokenFieldName]={access_token:token,valid:false,error: 'InternalError', error_message: error + " "};
                         next();
                     }else {
                         return res.status(500).send({valid:false,error: 'InternalError', error_message: error + " "});
@@ -207,13 +213,15 @@ function checkAuthorizationFunction(req, res, next) {
                             req[conf.decodedTokenFieldName]={
                                 error: decoded.error,
                                 error_message: decoded.error_message,
-                                valid:false
+                                valid:false,
+                                access_token:token
                             };
                             next();
                         }else {
                         return res.status(response.statusCode).send({
                             error: decoded.error,
-                            error_message: decoded.error_message
+                            error_message: decoded.error_message,
+                            access_token:token
                         });
                         }
                     } else {
@@ -225,14 +233,16 @@ function checkAuthorizationFunction(req, res, next) {
                                 req[conf.decodedTokenFieldName]={
                                     error: 'Unauthorized',
                                     error_message: decoded.error_message,
-                                    valid:false
+                                    valid:false,
+                                    access_token:token
                                 };
                                 next();
                             }else {
                                 return res.status(401).send({
                                     error: 'Unauthorized',
                                     error_message: decoded.error_message,
-                                    valid:false
+                                    valid:false,
+                                    access_token:token
                                 });
                             }
                         }
@@ -254,14 +264,16 @@ function checkAuthorizationFunction(req, res, next) {
                                 req[conf.decodedTokenFieldName]={
                                     error: 'Unauthorized',
                                     error_message: "You are not authorized to access this resource",
-                                    valid:false
+                                    valid:false,
+                                    access_token:token
                                 };
                                 next();
                             }else {
                                 return res.status(401).send({
                                     error: 'Unauthorized',
                                     error_message: "You are not authorized to access this resource",
-                                    valid:false
+                                    valid:false,
+                                    access_token:token
                                 });
                             }
                         }
@@ -270,14 +282,16 @@ function checkAuthorizationFunction(req, res, next) {
                             req[conf.decodedTokenFieldName]={
                                 error: "BadRequest",
                                 error_message: "No auth roles defined for: " + req.method + " " + URI,
-                                valid:false
+                                valid:false,
+                                access_token:token
                             };
                             next();
                         }else {
                             return res.status(401).send({
                                 error: "BadRequest",
                                 error_message: "No auth roles defined for: " + req.method + " " + URI,
-                                valid:false
+                                valid:false,
+                                access_token:token
                             });
                         }
                     }
@@ -286,24 +300,26 @@ function checkAuthorizationFunction(req, res, next) {
                         req[conf.decodedTokenFieldName]={
                             error: "BadRequest",
                             error_message: "No auth roles defined for: " + req.method + " " + URI,
-                            valid:false
+                            valid:false,
+                            access_token:token
                         };
                         next();
                     }else {
                         return res.status(401).send({
                             error: "BadRequest",
                             error_message: "No auth roles defined for: " + req.method + " " + URI,
-                            valid:false
+                            valid:false,
+                            access_token:token
                         });
                     }
                 }
 
             }else{
                 if(!(conf.answerOnTheFly)){
-                    req[conf.decodedTokenFieldName]={valid:false,error: "BadRequest", error_message: decoded.error_message};
+                    req[conf.decodedTokenFieldName]={access_token:token, valid:false,error: "BadRequest", error_message: decoded.error_message};
                     next();
                 }else {
-                    return res.status(400).send({valid:false,error: "BadRequest", error_message: decoded.error_message})
+                    return res.status(400).send({access_token:token, valid:false,error: "BadRequest", error_message: decoded.error_message})
                 }
             }
         }
