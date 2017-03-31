@@ -82,7 +82,8 @@ function checkTokenValidityFunction(req, res, next) {
                     decoded = JSON.parse(body);
 
                     if (decoded.valid == true) {
-                        req[conf.decodedTokenFieldName] = decoded.token;
+                        decoded.access_token=token;
+                        req[conf.decodedTokenFieldName] = decoded;
                         next();
                     } else {
                         if(!(conf.answerOnTheFly)){
@@ -110,6 +111,7 @@ function checkTokenValidityFunction(req, res, next) {
         }else{ // local Use
             let decoded=decodeToken(token);
             if(decoded.valid){
+                decoded.access_token=token;
                 req[conf.decodedTokenFieldName] = decoded;
                 next();
             }else{
@@ -226,7 +228,8 @@ function checkAuthorizationFunction(req, res, next) {
                         }
                     } else {
                         if (decoded.valid == true) {
-                            req[conf.decodedTokenFieldName] = decoded.token;
+                            decoded.access_token=token;
+                            req[conf.decodedTokenFieldName] = decoded;
                             next();
                         } else {
                             if(!(conf.answerOnTheFly)){
@@ -257,6 +260,7 @@ function checkAuthorizationFunction(req, res, next) {
                     var role = currentRoles[URI][req.method.toUpperCase()];
                     if (role) {
                         if (_.contains(role, tokenType)) {
+                            decoded.access_token=token;
                             req[conf.decodedTokenFieldName] = decoded;
                             next();
                         } else {
