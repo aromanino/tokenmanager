@@ -208,7 +208,12 @@ function checkAuthorizationFunction(req, res, next) {
                     }
                 } else {
 
-                    decoded = JSON.parse(body);
+                    try {
+                        decoded = JSON.parse(body);
+                    }catch (ex) {
+                        return res.status(response.statusCode).send({valid:false,error: 'InternalError', error_message: ex + " "});
+                    }
+
 
                     if (_.isUndefined(decoded.valid)) {
                         if(!(conf.answerOnTheFly)){
